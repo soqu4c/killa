@@ -1,439 +1,146 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;900&display=swap');
-
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
+/* Общие стили */
 body {
-    background-color: #000;
+    background: #000;
     color: #fff;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Courier New', monospace;
+    margin: 0;
     overflow-x: hidden;
 }
 
-/* Шапка - теперь всегда поверх всего */
 .main-header {
-    position: fixed;
-    top: 0;
-    width: 100%;
-    padding: 20px 40px;
+    background: rgba(0, 0, 0, 0.9);
+    border-bottom: 1px solid #111;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #111;
-    background: rgba(0,0,0,0.8);
-    backdrop-filter: blur(10px);
-    z-index: 5000; /* Выше чем Welcome */
-}
-
-.logo { font-weight: 900; letter-spacing: 5px; text-transform: uppercase; }
-
-.btn-login {
-    font-size: 11px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    cursor: pointer;
-    border: 1px solid #222;
-    padding: 8px 15px;
-    transition: 0.3s;
-}
-
-.btn-login:hover { background: #fff; color: #000; }
-
-/* Welcome Screen */
-.welcome-top {
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    padding: 10px 30px;
     position: fixed;
+    width: 100%;
     top: 0;
-    left: 0;
-    width: 100%;
-    background: #000;
-    z-index: 4000; /* Чуть ниже шапки */
-    transition: transform 1.2s cubic-bezier(0.8, 0, 0.2, 1);
+    z-index: 1000;
 }
 
-.welcome-top h1 { font-size: 8vw; text-transform: uppercase; font-weight: 900; }
-.hidden-welcome { transform: translateY(-100%); }
-
-/* Основной контент (добавил отступ сверху для шапки) */
-.main-content { padding: 120px 20px 60px; max-width: 800px; margin: 0 auto; }
-
-.tabs-nav {
-    display: flex;
-    gap: 20px;
-    margin-bottom: 40px;
-    justify-content: center;
-}
-
-.tab-btn {
-    background: none;
-    border: none;
-    color: #333;
-    font-weight: 900;
-    text-transform: uppercase;
-    cursor: pointer;
-    font-size: 14px;
-    transition: 0.3s;
-}
-
-.tab-btn.active, .tab-btn:hover { color: #fff; }
-
-.content-section {
-    display: none;
-    width: 100%;
-    max-width: 900px;
-    margin: 80px auto 0 auto; /* Опускаем ниже шапки и центрируем */
-    padding: 20px;
-    box-sizing: border-box;
-}
-
-#info-section {
-    text-align: left; /* Чтобы текст не разлетался */
-}
-
-.card {
-    background: rgba(10, 10, 10, 0.8);
-    border: 1px solid #111;
-    padding: 30px;
-    border-radius: 4px;
-}
-
-.card h3 { font-size: 18px; margin-bottom: 20px; letter-spacing: 2px; }
-.card p { color: #555; line-height: 1.6; font-size: 14px; white-space: pre-wrap; }
-
-/* Modal */
-.modal-overlay {
-    display: none; /* Переключается скриптом */
-    position: fixed;
-    top: 0; 
-    left: 0; 
-    width: 100%; 
-    height: 100%;
-    background: rgba(0,0,0,0.98);
-    z-index: 10000;
-    /* УБРАЛИ flex, чтобы исчезла центральная полоса */
-}
-.modal-card {
-    background: #050505;
-    border: 1px solid #111;
-    padding: 20px 30px 40px; /* Уменьшили верхний отступ */
-    width: 90%;
-    max-width: 350px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    box-sizing: border-box;
-
-    /* ЖЕСТКОЕ ЦЕНТРИРОВАНИЕ */
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-}
-
-.modal-card h2 {
-    font-size: 16px;
-    margin-top: 0; /* Подняли максимально вверх */
-    margin-bottom: 25px; /* Отступ до первого поля ввода */
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: #fff;
-    font-weight: 900;
-    text-align: center;
-    width: 100%;
-}
-.modal-card input {
-    width: 100%;
-    background: #000;
-    border: 1px solid #222;
-    padding: 12px 14px;
-    color: #fff;
-    margin-bottom: 15px;
-    font-family: inherit;
-    outline: none;
-    box-sizing: border-box;
-}
-
-.auth-submit {
-    background: #fff;
-    color: #000;
-    border: none;
-    padding: 14px;
-    font-weight: 900;
-    cursor: pointer;
-    text-transform: uppercase;
-}
-
-.auth-switch {
-    font-size: 10px;
-    color: #444;
-    text-align: center;
-    margin-top: 20px;
-    cursor: pointer;
-}
-
-/* Автор новости */
-.author-info {
-    font-size: 10px;
-    margin-bottom: 10px;
-    display: flex;
-    gap: 10px;
-    text-transform: uppercase;
-    font-weight: 900;
-}
-
-.author-name { color: #fff; }
-.role-tag { letter-spacing: 1px; }
-
-/* Карточка новости */
-.news-card {
-    margin-bottom: 20px;
-    border-left: 2px solid #111;
-    transition: 0.3s;
-}
-
-.news-card:hover { border-left-color: #fff; }
-
-/* Форма в кабинете */
-.post-form {
-    margin-top: 30px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.post-form h4 {
-    font-size: 12px;
-    letter-spacing: 2px;
-    margin-bottom: 10px;
-}
-
-.post-form input, .post-form textarea {
-    background: #000;
-    border: 1px solid #111;
-    padding: 12px;
-    color: #fff;
-    font-family: inherit;
-    outline: none;
-}
-
-.post-form textarea { min-height: 100px; resize: none; }
-
-.role-badge {
-    padding: 2px 8px;
-    background: rgba(255,255,255,0.05);
-    border-radius: 3px;
-    font-weight: 900;
-}
-
-.main-access-btn:hover {
-    background: #ccc !important;
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
-}
-
+/* Яркая кнопка ACCESS */
 .main-access-btn {
     background: #fff !important;
     color: #000 !important;
-    font-weight: 900 !important;
-    border: none !important;
-    padding: 8px 20px !important;
-    box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
-    cursor: pointer;
+    font-weight: 900;
+    border: none;
+    padding: 6px 18px;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
 }
 
-#cabinet-section {
-    margin-top: 80px; /* Регулируй этот параметр, чтобы опустить ниже/выше */
+/* Контентные секции */
+.content-section {
+    display: none;
+    max-width: 900px;
+    margin: 110px auto 100px; /* Опускаем от шапки и даем место для ввода снизу */
+    padding: 0 20px;
 }
 
-.profile-card {
-    padding-top: 40px;
+.card {
+    background: #050505;
+    border: 1px solid #111;
+    padding: 25px;
+    border-radius: 2px;
 }
 
+/* Кабинет */
 .profile-header {
     display: flex;
-    justify-content: space-between;
+    gap: 20px;
     align-items: center;
     margin-bottom: 30px;
+}
+
+.avatar-current {
+    width: 70px;
+    height: 70px;
+    border: 1px solid #222;
+    background: #000;
 }
 
 .stats-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-bottom: 30px;
-    padding: 20px;
-    background: rgba(255,255,255,0.02);
-    border: 1px solid #111;
+    gap: 15px;
+    border-top: 1px solid #111;
+    padding-top: 20px;
 }
 
-.stat-item { display: flex; flex-direction: column; gap: 5px; }
-.stat-label { font-size: 10px; color: #444; text-transform: uppercase; }
-.stat-value { font-weight: 900; font-size: 14px; }
-
-.logout-btn {
-    margin-top: 30px;
-    background: none;
-    border: 1px solid #ff3e3e;
-    color: #ff3e3e;
-    padding: 10px;
-    width: 100%;
-    cursor: pointer;
-    font-weight: 900;
-    font-size: 11px;
-    transition: 0.3s;
-}
-
-.logout-btn:hover { background: #ff3e3e; color: #000; }
-
-/* Выпадающее меню */
-.user-area { position: relative; }
-.dropdown-content {
-    display: none;
-    position: absolute;
-    right: 0; top: 110%;
-    background: #050505;
-    border: 1px solid #111;
-    min-width: 150px;
-    z-index: 1000;
-}
-.dropdown-item {
-    padding: 12px 15px;
-    font-size: 11px;
-    cursor: pointer;
-    transition: 0.2s;
-}
-.dropdown-item:hover { background: #111; color: #fff; }
-.dropdown-divider { height: 1px; background: #111; }
-.logout { color: #ff3e3e; }
-
-/* Поле ввода как в чате */
-.chat-input-container {
-    position: fixed;
-    bottom: 0; left: 0;
-    width: 100%;
-    padding: 20px;
-    background: linear-gradient(transparent, #000);
-    z-index: 999;
-}
-.chat-inner {
-    max-width: 800px;
-    margin: 0 auto;
-    display: flex;
-    background: #0a0a0a;
-    border: 1px solid #1a1a1a;
-    border-radius: 5px;
-    padding: 5px 15px;
-}
-#news-text {
-    flex: 1;
-    background: none; border: none; color: #fff;
-    padding: 10px; outline: none; resize: none;
-}
-.send-btn {
-    background: none; border: none; cursor: pointer;
-    display: flex; align-items: center;
-}
-.send-btn svg { width: 20px; fill: #3eafff; }
-
-/* Аватарки */
-.avatar-grid { display: flex; gap: 10px; margin: 15px 0; }
-.av-opt { width: 50px; height: 50px; border: 1px solid #222; cursor: pointer; }
-.av-opt:hover { border-color: #fff; }
-
-/* Контейнер сообщений чата */
-.chat-box {
-    height: 60vh;
-    overflow-y: auto;
-    padding: 15px;
-    background: #050505;
-    border: 1px solid #111;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-/* Стиль сообщения в чате */
-.chat-msg {
-    font-size: 13px;
-    line-height: 1.4;
-    padding: 5px 10px;
-    border-left: 1px solid #333;
-}
-.chat-msg b { font-size: 11px; text-transform: uppercase; margin-right: 8px; }
-
-/* Полоса ввода внизу чата */
-.chat-input-bar {
-    display: flex;
-    gap: 10px;
-    margin-top: 15px;
-    background: #0a0a0a;
-    padding: 10px;
-    border: 1px solid #1a1a1a;
-}
-.chat-input-bar input {
-    flex: 1;
-    background: none; border: none; color: #fff; outline: none;
-}
-
-/* style.css (Вкладка Кабинет) */
-
-/* Главный блок профиля (Ник + Ава) */
-.profile-main-info {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    margin-bottom: 30px;
-    border-bottom: 1px solid #111;
-    padding-bottom: 20px;
-}
-
-/* Стили большой аватарки в профиле */
-.avatar-current {
-    width: 60px;
-    height: 60px;
-    background: #000;
-    border: 1px solid #222;
-    padding: 5px;
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
-}
-
-/* Текст рядом с аватаркой */
-.profile-text-info {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.profile-text-info h2 {
-    font-size: 16px;
-    color: #fff;
-    margin: 0;
-    font-weight: 900;
-}
-
-/* Сетка выбора аватарок (убираем синие блоки) */
 .avatar-grid {
     display: flex;
     gap: 10px;
     margin-top: 15px;
-    justify-content: center;
-    background: #050505; /* Исправили синий фон на черный */
     padding: 10px;
-    border: 1px solid #111;
+    background: #080808;
 }
 
-/* Маленькие аватарки для выбора */
-.av-opt {
+.avatar-grid img {
     width: 40px;
     height: 40px;
-    border: 1px solid #222;
-    background: #000;
     cursor: pointer;
-    transition: 0.2s;
+    border: 1px solid #222;
 }
 
-.av-opt:hover {
-    border-color: #fff;
-    transform: scale(1.1);
+/* Чат */
+.chat-box {
+    height: 65vh;
+    overflow-y: auto;
+    border: 1px solid #111;
+    padding: 15px;
+    background: #020202;
+}
+
+.chat-msg {
+    margin-bottom: 8px;
+    border-left: 2px solid #222;
+    padding-left: 10px;
+}
+
+/* Панель ввода */
+.chat-input-area {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background: #000;
+    border-top: 1px solid #111;
+    padding: 15px 0;
+    z-index: 999;
+}
+
+.input-wrapper {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    gap: 10px;
+    padding: 0 20px;
+}
+
+#chat-msg-input {
+    flex: 1;
+    background: #0a0a0a;
+    border: 1px solid #222;
+    color: #fff;
+    padding: 12px;
+    outline: none;
+}
+
+.send-btn {
+    background: #fff;
+    color: #000;
+    border: none;
+    font-weight: bold;
+    padding: 0 25px;
+    cursor: pointer;
+}
+
+.logout-btn {
+    margin-top: 30px;
+    width: 100%;
+    background: none;
+    border: 1px solid #ff3e3e;
+    color: #ff3e3e;
+    padding: 10px;
+    cursor: pointer;
 }

@@ -9,24 +9,47 @@
 <body>
 
     <header class="main-header">
-    <div class="logo" onclick="showTab(null, 'news')">KILLA</div>
-    <div class="nav-links">
-        <button class="tab-btn active" onclick="showTab(event, 'news')">NEWS</button>
-        <button class="tab-btn" onclick="showTab(event, 'info')">INFO</button>
-    </div>
+    <div class="logo">KILLA</div>
+    <nav class="nav-links">
+        <button class="tab-btn active" onclick="showTab(event, 'news-section')">NEWS</button>
+        <button class="tab-btn" onclick="showTab(event, 'chat-section')">CHAT</button>
+        <button id="cabinet-tab-btn" class="tab-btn" onclick="showTab(event, 'cabinet-section')" style="display:none;">CABINET</button>
+    </nav>
     <div class="user-area">
-        <div id="auth-section">
-            <button id="auth-btn" class="btn-login" onclick="openAuthModal()">CABINET</button>
-            <div id="user-dropdown" class="dropdown-content">
-                <div class="dropdown-item" onclick="showTab(null, 'cabinet')">PROFILE</div>
-                <div class="dropdown-item" onclick="showTab(null, 'settings')">SETTINGS</div>
-                <div class="dropdown-divider"></div>
-                <div class="dropdown-item logout" onclick="handleLogout()">TERMINATE</div>
-            </div>
-        </div>
+        <button id="auth-btn" class="btn-login" onclick="openAuthModal()">ACCESS</button>
     </div>
 </header>
 
+<main>
+    <section id="news-section" class="content-section active">
+        <div id="news-container" class="feed-container"></div>
+    </section>
+
+    <section id="chat-section" class="content-section">
+        <div id="chat-messages" class="chat-box"></div>
+        <div id="chat-input-area" class="chat-input-bar" style="display:none;">
+            <input type="text" id="chat-input" placeholder="Secure message..." onkeypress="if(event.key==='Enter') sendChatMessage()">
+            <button onclick="sendChatMessage()">SEND</button>
+        </div>
+    </section>
+
+    <section id="cabinet-section" class="content-section">
+        <div class="card profile-card">
+            <h2 id="user-display-name">---</h2>
+            <div id="user-role-badge" class="role-badge">---</div>
+            <p>SECURITY: <span id="security-level">---</span></p>
+            <hr>
+            <div class="settings-mini">
+                <h4>AVATAR CONFIG</h4>
+                <div class="avatar-grid">
+                    <img src="https://api.dicebear.com/7.x/identicon/svg?seed=1" onclick="updateAvatar(this.src)">
+                    <img src="https://api.dicebear.com/7.x/identicon/svg?seed=Killa" onclick="updateAvatar(this.src)">
+                </div>
+            </div>
+            <button class="logout-btn" onclick="handleLogout()">TERMINATE SESSION</button>
+        </div>
+    </section>
+</main>
 <div id="cabinet" class="content-section">
     <div class="card profile-card">
         <div class="profile-header">
@@ -219,41 +242,67 @@ window.onclick = (e) => {
     }
 };
 
+// --- ЛОГИКА ЧАТА ---
+window.sendChatMessage = async () => {
+    const input = document.getElementById('chat-input');
+    if(!input.value.trim()) return;
+
+    const user = auth.currentUser;
+    const userRef = ref(db, 'users/' + user.uid);
+    const snap = await get(userRef);
+    const userData = snap.val();
+
+    await push(ref(db, 'chat_messages'), {
+        text: input.value,
+        author: userData.name,
+        role: userData.role,
+        time: Date.now()
+    });
+    input.value = '';
+};
+
+// Слушаем ЧАТ
+onValue(ref(db, 'chat_messages'), (snapshot) => {
+    const box = document.getElementById('chat-messages');
+    box.innerHTML = '';
+    const data = snapshot.val();
+    if(data) {
+        Object.values(data).forEach(msg => {
+            const color = roleStyles[msg.role]?.color || '#888';
+            box.innerHTML += `
+                <div class="chat-msg">
+                    <b style="color:${color}">${msg.author}:</b>
+                    <span>${msg.text}</span>
+                </div>`;
+        });
+        box.scrollTop = box.scrollHeight;
+    }
+});
+
+// --- ОБНОВЛЕНИЕ СОСТОЯНИЯ ---
 onAuthStateChanged(auth, async (user) => {
-    const authBtn = document.getElementById('auth-btn');
-    const newsInput = document.getElementById('news-input-zone');
+    const chatInput = document.getElementById('chat-input-area');
+    const cabBtn = document.getElementById('cabinet-tab-btn');
     
     if (user) {
-        const userRef = ref(db, 'users/' + user.uid);
-        const snap = await get(userRef);
-        const userData = snap.val() || { role: 'Member', name: 'User' };
+        const snap = await get(ref(db, 'users/' + user.uid));
+        const userData = snap.val() || {};
         
-        // Уровни доступа (Developer выше всех)
-        const roleInfo = {
-            'Developer': { color: '#3eafff', level: 6 },
-            'Owner': { color: '#ff3e3e', level: 5 },
-            'Крутой поц': { color: '#00ff00', level: 3 }
-        }[userData.role] || { color: '#888', level: 1 };
-
-        authBtn.innerText = userData.name.toUpperCase();
-        authBtn.style.borderColor = roleInfo.color;
-        authBtn.onclick = toggleUserMenu; // Теперь открывает меню
-
-        // Если роль позволяет (уровень > 2), показываем поле ввода новостей
-        if (roleInfo.level >= 3) {
-            newsInput.style.display = 'block';
-        }
+        // Показываем кнопку кабинета и ввод в чат
+        cabBtn.style.display = 'inline-block';
+        chatInput.style.display = 'flex';
         
-        // Обновляем данные в кабинете (если нужно)
-        document.getElementById('user-display-name').innerText = userData.name;
-        document.getElementById('user-role-badge').innerText = userData.role;
-        document.getElementById('security-level').innerText = "Level " + roleInfo.level;
+        // Настраиваем иерархию (Dev > Owner)
+        const levels = { 'Developer': 6, 'Owner': 5, 'Крутой поц': 3, 'Member': 1 };
+        const currentLevel = levels[userData.role] || 1;
         
+        document.getElementById('security-level').innerText = currentLevel;
+        document.getElementById('auth-btn').innerText = userData.name.toUpperCase();
     } else {
-        authBtn.innerText = 'CABINET';
-        authBtn.onclick = openAuthModal;
-        newsInput.style.display = 'none';
-        showTab(null, 'news');
+        cabBtn.style.display = 'none';
+        chatInput.style.display = 'none';
+        document.getElementById('auth-btn').innerText = 'ACCESS';
+        showTab(null, 'news-section');
     }
 });
 

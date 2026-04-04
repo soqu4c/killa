@@ -14,20 +14,13 @@
 <header class="main-header">
     <div class="logo">KILLA</div>
     <nav class="nav-links">
-    <button class="tab-btn active" onclick="window.showTab(event, 'news-section')">NEWS</button>
-    <button id="chat-tab-btn" class="tab-btn" onclick="window.showTab(event, 'chat-section')" style="display:none;">CHAT</button>
-    <button class="tab-btn" onclick="window.showTab(event, 'info-section')">INFO</button>
-</nav>
+        <button class="tab-btn active" onclick="window.showTab(event, 'news-section')">NEWS</button>
+        <button id="chat-tab-btn" class="tab-btn" onclick="window.showTab(event, 'chat-section')" style="display:none;">CHAT</button>
+        <button class="tab-btn" onclick="window.showTab(event, 'info-section')">INFO</button>
+    </nav>
     <div class="user-area">
         <button id="auth-btn" class="btn-login main-access-btn" onclick="window.openAuthModal()">ACCESS</button>
     </div>
-
-    <div class="server-status">
-    <span class="live-dot"></span>
-    <span class="status-text">NODE: <span id="node-id">KILLA-01</span></span>
-    <span class="status-text">USERS: <span id="live-users-count">0</span></span>
-</div>
-
 </header>
 
 <main>
@@ -115,6 +108,12 @@
             </button>
         </div>
     </div>
+</div>
+
+<div class="system-footer-status">
+    <span class="live-dot"></span>
+    NODE: <span class="accent-white">KILLA</span> 
+    USERS: <span id="live-users-count" class="accent-white">0</span>
 </div>
 
 <div id="admin-console" style="display:none;">
@@ -340,7 +339,10 @@ authBtn.onclick = (e) => {
 };
 
             onValue(ref(db, 'system/users_count'), (snap) => {
-    document.getElementById('live-users-count').innerText = snap.val() || 0;
+    const countElement = document.getElementById('live-users-count');
+    if (countElement) {
+        countElement.innerText = snap.val() || 0;
+    }
 });
                 // Показываем чат
                 chatTabBtn.style.display = 'inline-block';

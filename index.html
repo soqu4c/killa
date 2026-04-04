@@ -204,33 +204,21 @@
     };
 
     window.showTab = (event, tabId) => {
-    // 1. Скрываем все секции
-    document.querySelectorAll('.content-section').forEach(section => {
-        section.style.display = 'none';
-        section.classList.remove('active');
-    });
-
-    // 2. Активируем нужную секцию
-    const target = document.getElementById(tabId);
-    target.style.display = 'block';
-    target.classList.add('active');
-
-    // 3. УПРАВЛЕНИЕ СТРОКОЙ ВВОДА
-    const inputZone = document.getElementById('chat-input-zone');
+    // Скрываем все секции
+    document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none');
     
-    // Показываем только в NEWS и CHAT, и только если залогинен
-    if ((tabId === 'news-section' || tabId === 'chat-section') && auth.currentUser) {
-        // Проверяем уровень доступа перед показом (например, уровень > 2)
-        // Эту проверку можно взять из сохраненного состояния пользователя
-        inputZone.style.display = 'block';
+    // Показываем нужную
+    const target = document.getElementById(tabId);
+    if(target) target.style.display = 'block';
+
+    // УПРАВЛЕНИЕ СТРОКОЙ ВВОДА
+    const inputZone = document.getElementById('chat-input-zone');
+    // Показываем только если мы в News или Chat
+    if (tabId === 'news-section' || tabId === 'chat-section') {
+        // Проверяем, залогинен ли пользователь (чтобы анонимы не видели ввод)
+        if (auth.currentUser) inputZone.style.display = 'block';
     } else {
         inputZone.style.display = 'none';
-    }
-
-    // Обновляем визуальный вид кнопок в меню
-    if (event) {
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        event.currentTarget.classList.add('active');
     }
 };
 
@@ -346,51 +334,63 @@ window.setAvatar = async (url) => {
 // --- ОБНОВЛЕНИЕ СОСТОЯНИЯ ---
 onAuthStateChanged(auth, async (user) => {
     const authBtn = document.getElementById('auth-btn');
-    const chatTabBtn = document.getElementById('chat-tab-btn'); // Кнопка CHAT в меню
-    const chatInput = document.getElementById('chat-input-area'); // Поле ввода в чате
+    const chatTabBtn = document.getElementById('chat-tab-btn');
+    const chatInput = document.getElementById('chat-input-area');
     
     if (user) {
+        // 1. Получаем ссылку на юзера и сами данные
         const userRef = ref(db, 'users/' + user.uid);
         const snap = await get(userRef);
-        let userData = snap.val() || { role: 'Member', name: 'User' };
+        let userData = snap.val();
 
-        // 1. Показываем вкладку CHAT в меню
-        chatTabBtn.style.display = 'inline-block';
-
-        // 2. ИЕРАРХИЯ РОЛЕЙ И УРОВНЕЙ
-        const roleInfo = {
-            'Developer': { color: '#3eafff', level: 6 }, // Самый высокий
-            'Owner': { color: '#ff3e3e', level: 5 },
-            'Крутой поц': { color: '#00ff00', level: 3 }, // Твоя роль
-            'Member': { color: '#888', level: 1 }
-        }[userData.role] || { color: '#888', level: 1 };
-
-        // 3. Настройка кнопки профиля (ACCESS меняется на НИК)
-        authBtn.innerText = userData.name.toUpperCase();
-        authBtn.classList.remove('main-access-btn'); // Убираем яркий стиль
-        authBtn.style.color = roleInfo.color;
-        authBtn.style.border = `1px solid ${roleInfo.color}`;
-        authBtn.style.background = 'none';
-
-        // 4. Показываем поле ввода в чате, если уровень позволяет
-        if (roleInfo.level >= 3) {
-            chatInput.style.display = 'flex';
+        // 2. Если данных почему-то нет (новый юзер), создаем их
+        if (!userData) {
+            // Логика создания нового ID (как я писал выше)
+            const countSnap = await get(ref(db, 'system/users_count'));
+            let newId = countSnap.exists() ? countSnap.val() + 1 : 1;
+            
+            userData = { 
+                id: newId, 
+                role: 'Member', 
+                name: user.email.split('@')[0],
+                avatar: 'https://api.dicebear.com/7.x/identicon/svg?seed=' + user.uid
+            };
+            await set(userRef, userData);
+            await set(ref(db, 'system/users_count'), newId);
         }
 
-        authBtn.onclick = () => showTab(null, 'cabinet-section');
+        // --- ВОТ СЮДА ДОБАВЛЯЕМ ОБНОВЛЕНИЕ ИНТЕРФЕЙСА ---
+        
+        // Отображаем порядковый ID (1, 2, 3...)
+        if (document.getElementById('user-id-number')) {
+            document.getElementById('user-id-number').innerText = userData.id;
+        }
+
+        // Отображаем имя
+        document.getElementById('user-display-name').innerText = userData.name;
+        
+        // Настраиваем роль и цвет (Developer > Owner)
+        const roleInfo = {
+            'Developer': { color: '#3eafff', level: 6 },
+            'Owner': { color: '#ff3e3e', level: 5 },
+            'Крутой поц': { color: '#00ff00', level: 3 }
+        }[userData.role] || { color: '#888', level: 1 };
+
+        document.getElementById('user-role-badge').innerText = userData.role;
+        document.getElementById('user-role-badge').style.color = roleInfo.color;
+        document.getElementById('security-level').innerText = "Level " + roleInfo.level;
+        
+        // -----------------------------------------------
+
+        authBtn.innerText = userData.name.toUpperCase();
+        chatTabBtn.style.display = 'inline-block';
+        if (roleInfo.level >= 3) chatInput.style.display = 'flex';
 
     } else {
-        // ЕСЛИ НЕ АВТОРИЗОВАН
-        authBtn.innerText = 'ACCESS';
-        authBtn.classList.add('main-access-btn'); // Возвращаем яркий стиль
-        authBtn.onclick = () => openAuthModal();
-        
-        // Скрываем чат полностью
-        chatTabBtn.style.display = 'none';
-        chatInput.style.display = 'none';
-        
-        // Если человек был на вкладке чата и вышел — кидаем на новости
-        showTab(null, 'news-section');
+        // Логика для гостя...
+        if (document.getElementById('user-id-number')) {
+            document.getElementById('user-id-number').innerText = "---";
+        }
     }
 });
 
@@ -403,6 +403,27 @@ window.setAvatar = async (url) => {
         const pass = document.getElementById('auth-password').value;
         const nick = document.getElementById('auth-login').value;
         const isReg = document.getElementById('auth-login').style.display !== 'none';
+        const usersCountRef = ref(db, 'system/users_count');
+const countSnap = await get(usersCountRef);
+let newId = 1;
+
+if (countSnap.exists()) {
+    newId = countSnap.val() + 1;
+}
+
+// Сохраняем пользователя с новым ID
+await set(ref(db, 'users/' + user.uid), {
+    uid: user.uid,
+    id: newId, // Тот самый 1, 2, 3...
+    name: name,
+    role: 'Member',
+    avatar: 'https://api.dicebear.com/7.x/identicon/svg?seed=' + name
+});
+
+<p>USER ID: <span id="user-id-number" style="color: #3eafff;">---</span></p>
+
+// Обновляем общий счетчик в базе
+await set(usersCountRef, newId);
 
         try {
             if (isReg) {
@@ -437,37 +458,26 @@ window.setAvatar = async (url) => {
     // Универсальная функция отправки
 window.handleSend = async () => {
     const input = document.getElementById('chat-msg-input');
-    const text = input.value.trim();
-    
-    if (!text) return; // Просто выходим, если пусто, без алертов
+    const msgText = input.value.trim();
+
+    if (!msgText) return; // Больше никаких алертов "заполни поля"
 
     const user = auth.currentUser;
-    const userRef = ref(db, 'users/' + user.uid);
-    const snap = await get(userRef);
-    const userData = snap.val() || { name: 'Anonymous', role: 'Member' };
+    const snap = await get(ref(db, 'users/' + user.uid));
+    const userData = snap.val();
 
-    // Проверяем, на какой мы вкладке, чтобы знать, куда сохранять
-    const activeTab = document.querySelector('.content-section.active').id;
+    // Определяем куда слать
+    const isChat = document.getElementById('chat-section').style.display === 'block';
+    const path = isChat ? 'chat_messages' : 'posts';
 
-    if (activeTab === 'chat-section') {
-        // Отправка в ЧАТ
-        await push(ref(db, 'chat_messages'), {
-            text: text,
-            author: userData.name,
-            role: userData.role,
-            timestamp: Date.now()
-        });
-    } else if (activeTab === 'news-section') {
-        // Отправка в НОВОСТИ (только текст, без заголовка)
-        await push(ref(db, 'posts'), {
-            text: text,
-            author: userData.name,
-            role: userData.role,
-            timestamp: Date.now()
-        });
-    }
+    await push(ref(db, path), {
+        text: msgText,
+        author: userData.name,
+        role: userData.role,
+        timestamp: Date.now()
+    });
 
-    input.value = ''; // Очищаем поле
+    input.value = '';
 };
 
 </script>

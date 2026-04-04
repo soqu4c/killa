@@ -91,12 +91,12 @@
     const db = getDatabase(app);
 
     const roleStyles = {
-        'Owner': { color: '#ff3e3e' },
-        'Dep.Owner': { color: '#ff8a3e' },
-        'Developer': { color: '#3eafff' },
-        'Member': { color: '#888' }
-    };
-
+    'Developer': { color: '#3eafff', level: 'Level 6 (SYSTEM CORE)' }, // Самый высокий
+    'Owner': { color: '#ff3e3e', level: 'Level 5 (ROOT)' },
+    'Dep.Owner': { color: '#ff8a3e', level: 'Level 4 (ADMIN)' },
+    'Крутой поц': { color: '#00ff00', level: 'Level 3 (ELITE)' }, // Новая роль
+    'Member': { color: '#888', level: 'Level 1 (GUEST)' }
+};
     // --- ГЛОБАЛЬНЫЕ ФУНКЦИИ (Для работы onclick в HTML) ---
     
     window.openAuthModal = () => {
@@ -158,17 +158,18 @@
     });
 
     // Добавь эту функцию в window
+// Функция для выхода (явно прописываем в window)
 window.handleLogout = () => {
-    if(confirm("Завершить сессию?")) {
-        signOut(auth).then(() => {
-            window.location.reload(); // Перезагрузка для чистоты состояния
-        });
-    }
+    signOut(auth).then(() => {
+        // Скрываем кабинет и переключаем на новости
+        document.getElementById('cabinet-tab').style.display = 'none';
+        window.showTab(null, 'news');
+    }).catch(e => console.error(e));
 };
 
 onAuthStateChanged(auth, async (user) => {
-    const cabTab = document.getElementById('cabinet-tab');
-    const authBtn = document.getElementById('auth-btn');
+    const cabTabBtn = document.getElementById('cabinet-tab-btn'); // Кнопка переключения в меню
+    const authBtn = document.getElementById('auth-btn'); // Кнопка в углу
     
     if (user) {
         const userRef = ref(db, 'users/' + user.uid);
@@ -180,31 +181,22 @@ onAuthStateChanged(auth, async (user) => {
             await set(userRef, userData);
         }
 
-        // Обновляем данные в кабинете
+        // Обновляем данные в профиле
+        const roleInfo = roleStyles[userData.role] || roleStyles['Member'];
         document.getElementById('user-display-name').innerText = userData.name.toUpperCase();
-        const badge = document.getElementById('user-role-badge');
-        badge.innerText = userData.role;
-        badge.style.color = roleStyles[userData.role]?.color || '#888';
-        
-        // Меняем Security Level в зависимости от роли
-        const secLevel = document.getElementById('security-level');
-        if(userData.role === 'Owner') secLevel.innerText = "Level 5 (ROOT)";
-        else if(userData.role === 'Developer') secLevel.innerText = "Level 4 (DEV)";
-        else secLevel.innerText = "Level 1 (GUEST)";
+        document.getElementById('user-role-badge').innerText = userData.role;
+        document.getElementById('user-role-badge').style.color = roleInfo.color;
+        document.getElementById('security-level').innerText = roleInfo.level;
 
-        // ГЛАВНОЕ: Кнопка в шапке теперь просто открывает вкладку кабинета
+        // Настройка кнопок
         authBtn.innerText = userData.name.toUpperCase();
-        authBtn.onclick = () => window.showTab(null, 'cabinet'); 
-        
-        if (cabTab) cabTab.style.display = 'block';
+        authBtn.onclick = () => window.showTab(null, 'cabinet');
+        if (cabTabBtn) cabTabBtn.style.display = 'inline-block';
     } else {
-        // Если не залогинен — кнопка открывает окно входа
-        if (authBtn) {
-            authBtn.innerText = 'CABINET';
-            authBtn.onclick = () => window.openAuthModal();
-        }
-        if (cabTab) cabTab.style.display = 'none';
-        window.showTab(null, 'news');
+        authBtn.innerText = 'CABINET';
+        authBtn.onclick = () => window.openAuthModal();
+        if (cabTabBtn) cabTabBtn.style.display = 'none';
+        window.showTab(null, 'news'); // Если вышел — всегда на новости
     }
 });
     window.handleAuth = async () => {

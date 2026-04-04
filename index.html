@@ -9,8 +9,22 @@
 <body>
 
     <header class="main-header">
-    <div class="logo">Killa</div>
-    <div id="auth-btn" class="btn-login">Cabinet</div>
+    <div class="logo" onclick="showTab(null, 'news')">KILLA</div>
+    <div class="nav-links">
+        <button class="tab-btn active" onclick="showTab(event, 'news')">NEWS</button>
+        <button class="tab-btn" onclick="showTab(event, 'info')">INFO</button>
+    </div>
+    <div class="user-area">
+        <div id="auth-section">
+            <button id="auth-btn" class="btn-login" onclick="openAuthModal()">CABINET</button>
+            <div id="user-dropdown" class="dropdown-content">
+                <div class="dropdown-item" onclick="showTab(null, 'cabinet')">PROFILE</div>
+                <div class="dropdown-item" onclick="showTab(null, 'settings')">SETTINGS</div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item logout" onclick="handleLogout()">TERMINATE</div>
+            </div>
+        </div>
+    </div>
 </header>
 
 <div id="cabinet" class="content-section">
@@ -57,6 +71,22 @@
                 </div>
             </div>
         </div>
+
+        <div id="settings" class="content-section">
+    <div class="card">
+        <h3>SYSTEM SETTINGS</h3>
+        <div class="avatar-selection">
+            <p>Select Avatar Component:</p>
+            <div class="avatar-grid">
+                <img src="https://api.dicebear.com/7.x/identicon/svg?seed=1" class="av-opt" onclick="setAvatar(this.src)">
+                <img src="https://api.dicebear.com/7.x/identicon/svg?seed=2" class="av-opt" onclick="setAvatar(this.src)">
+                <img src="https://api.dicebear.com/7.x/identicon/svg?seed=3" class="av-opt" onclick="setAvatar(this.src)">
+                <img src="https://api.dicebear.com/7.x/identicon/svg?seed=Killa" class="av-opt" onclick="setAvatar(this.src)">
+            </div>
+        </div>
+        <button class="auth-submit" onclick="showTab(null, 'cabinet')">SAVE CHANGES</button>
+    </div>
+</div>
     </main>
 
     <div id="auth-modal" class="modal-overlay" onclick="closeAuth()">
@@ -69,6 +99,15 @@
             <p class="auth-switch" onclick="toggleAuthMode()">Нет аккаунта? Регистрация</p>
         </div>
     </div>
+
+    <div id="news-input-zone" class="chat-input-container" style="display: none;">
+    <div class="chat-inner">
+        <textarea id="news-text" placeholder="Write a broadcast message..." rows="1"></textarea>
+        <button class="send-btn" onclick="publishNews()">
+            <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+        </button>
+    </div>
+</div>
 
     <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
@@ -94,7 +133,7 @@
     'Developer': { color: '#3eafff', level: 'Level 6 (SYSTEM CORE)' }, // Самый высокий
     'Owner': { color: '#ff3e3e', level: 'Level 5 (ROOT)' },
     'Dep.Owner': { color: '#ff8a3e', level: 'Level 4 (ADMIN)' },
-    'Крутой поц': { color: '#00ff00', level: 'Level 3 (ELITE)' }, // Новая роль
+    'Крутой поц': { color: '#ae70ff', level: 'Level 3 (ELITE)' }, // Новая роль
     'Member': { color: '#888', level: 'Level 1 (GUEST)' }
 };
     // --- ГЛОБАЛЬНЫЕ ФУНКЦИИ (Для работы onclick в HTML) ---
@@ -167,38 +206,61 @@ window.handleLogout = () => {
     }).catch(e => console.error(e));
 };
 
+// Переключение меню
+window.toggleUserMenu = () => {
+    const menu = document.getElementById('user-dropdown');
+    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+};
+
+// Закрытие меню при клике вне его
+window.onclick = (e) => {
+    if (!e.target.matches('#auth-btn')) {
+        document.getElementById('user-dropdown').style.display = 'none';
+    }
+};
+
 onAuthStateChanged(auth, async (user) => {
-    const cabTabBtn = document.getElementById('cabinet-tab-btn'); // Кнопка переключения в меню
-    const authBtn = document.getElementById('auth-btn'); // Кнопка в углу
+    const authBtn = document.getElementById('auth-btn');
+    const newsInput = document.getElementById('news-input-zone');
     
     if (user) {
         const userRef = ref(db, 'users/' + user.uid);
         const snap = await get(userRef);
-        let userData = snap.val();
+        const userData = snap.val() || { role: 'Member', name: 'User' };
+        
+        // Уровни доступа (Developer выше всех)
+        const roleInfo = {
+            'Developer': { color: '#3eafff', level: 6 },
+            'Owner': { color: '#ff3e3e', level: 5 },
+            'Крутой поц': { color: '#00ff00', level: 3 }
+        }[userData.role] || { color: '#888', level: 1 };
 
-        if (!userData) {
-            userData = { role: 'Member', name: user.displayName || "User" };
-            await set(userRef, userData);
-        }
-
-        // Обновляем данные в профиле
-        const roleInfo = roleStyles[userData.role] || roleStyles['Member'];
-        document.getElementById('user-display-name').innerText = userData.name.toUpperCase();
-        document.getElementById('user-role-badge').innerText = userData.role;
-        document.getElementById('user-role-badge').style.color = roleInfo.color;
-        document.getElementById('security-level').innerText = roleInfo.level;
-
-        // Настройка кнопок
         authBtn.innerText = userData.name.toUpperCase();
-        authBtn.onclick = () => window.showTab(null, 'cabinet');
-        if (cabTabBtn) cabTabBtn.style.display = 'inline-block';
+        authBtn.style.borderColor = roleInfo.color;
+        authBtn.onclick = toggleUserMenu; // Теперь открывает меню
+
+        // Если роль позволяет (уровень > 2), показываем поле ввода новостей
+        if (roleInfo.level >= 3) {
+            newsInput.style.display = 'block';
+        }
+        
+        // Обновляем данные в кабинете (если нужно)
+        document.getElementById('user-display-name').innerText = userData.name;
+        document.getElementById('user-role-badge').innerText = userData.role;
+        document.getElementById('security-level').innerText = "Level " + roleInfo.level;
+        
     } else {
         authBtn.innerText = 'CABINET';
-        authBtn.onclick = () => window.openAuthModal();
-        if (cabTabBtn) cabTabBtn.style.display = 'none';
-        window.showTab(null, 'news'); // Если вышел — всегда на новости
+        authBtn.onclick = openAuthModal;
+        newsInput.style.display = 'none';
+        showTab(null, 'news');
     }
 });
+
+window.setAvatar = async (url) => {
+    await set(ref(db, `users/${auth.currentUser.uid}/avatar`), url);
+    alert("Avatar updated!");
+};
     window.handleAuth = async () => {
         const email = document.getElementById('auth-email').value;
         const pass = document.getElementById('auth-password').value;

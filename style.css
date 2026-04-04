@@ -188,27 +188,61 @@ body {
 
 .input-broadcast-zone {
     position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    padding: 20px;
-    background: linear-gradient(transparent, rgba(0,0,0,0.8));
+    bottom: 30px; /* Отступ от нижнего края */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 700px;
     z-index: 1000;
-    display: flex;
-    justify-content: center;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Стеклянная панель */
+/* Кнопка скрыть/показать */
+.toggle-input-btn {
+    position: absolute;
+    top: -20px;
+    right: 20px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    color: #3eafff;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: bold;
+    z-index: 1001;
+    transition: 0.3s;
+}
+
+.input-broadcast-zone.minimized:hover {
+    opacity: 1;
+    bottom: -55px; /* Немного приподнимается при наведении */
+}
+
+/* Состояние, когда строка скрыта */
+.input-broadcast-zone.minimized {
+    bottom: -65px; /* Уходит вниз, оставляя только кнопку */
+    opacity: 0.5;
+}
+
+.toggle-input-btn:hover {
+    background: #3eafff;
+    color: #000;
+    box-shadow: 0 0 10px rgba(62, 175, 255, 0.5);
+}
+
+/* Стеклянный эффект */
 .input-glass-container {
-    width: 100%;
-    max-width: 800px;
-    background: rgba(15, 15, 15, 0.9);
+    background: rgba(10, 10, 10, 0.95);
     border: 1px solid #222;
-    border-radius: 15px;
-    padding: 10px 15px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    backdrop-filter: blur(10px);
-    transition: border-color 0.3s, box-shadow 0.3s;
+    border-radius: 20px;
+    padding: 12px 20px;
+    backdrop-filter: blur(15px);
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
 }
 
 .input-glass-container:focus-within {

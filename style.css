@@ -200,8 +200,8 @@ body {
 /* Кнопка скрыть/показать */
 .toggle-input-btn {
     position: absolute;
-    top: -20px;
-    right: 20px;
+    top: -15px; /* Чуть ниже к корпусу */
+    right: 0;
     background: #1a1a1a;
     border: 1px solid #333;
     color: #3eafff;
@@ -216,6 +216,11 @@ body {
     font-weight: bold;
     z-index: 1001;
     transition: 0.3s;
+}
+
+#news-container {
+    padding-top: 20px;
+    padding-bottom: 120px; /* Чтобы нижняя карточка не перекрывалась строкой ввода */
 }
 
 .input-broadcast-zone.minimized:hover {

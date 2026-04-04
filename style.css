@@ -406,15 +406,8 @@ body {
     font-size: 10px;
     color: #444;
 }
-.live-dot {
-    width: 6px;
-    height: 6px;
-    background: #00ff00;
-    border-radius: 50%;
-    box-shadow: 0 0 8px #00ff00;
-    animation: blink 1.5s infinite;
-}
-@keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
+
 
 #admin-console {
     position: fixed;
@@ -434,4 +427,52 @@ body {
     outline: none;
     border-left: 10px solid #3eafff;
     padding-left: 10px;
+}
+
+/* Системный статус слева снизу */
+.system-footer-status {
+    position: fixed;
+    bottom: 15px;
+    left: 20px;
+    font-family: 'Courier New', monospace; /* Настоящий терминальный шрифт */
+    font-size: 11px;
+    color: #555; /* Неяркий цвет, чтобы не отвлекало */
+    letter-spacing: 1px;
+    z-index: 999;
+    pointer-events: none; /* Чтобы не мешало кликать по элементам под текстом */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Белые акценты для значений */
+.accent-white {
+    color: #aaa;
+    font-weight: bold;
+}
+
+/* Мигающая точка */
+.live-dot {
+    width: 5px;
+    height: 5px;
+    background: #00ff00;
+    border-radius: 50%;
+    box-shadow: 0 0 5px #00ff00;
+    display: inline-block;
+    animation: blink 2s infinite;
+}
+
+@keyframes blink {
+    0% { opacity: 0.2; }
+    50% { opacity: 1; }
+    100% { opacity: 0.2; }
+}
+
+/* Чтобы на мобилках не перекрывало важные кнопки, можно чуть уменьшить */
+@media (max-width: 600px) {
+    .system-footer-status {
+        bottom: 5px;
+        left: 10px;
+        font-size: 9px;
+    }
 }

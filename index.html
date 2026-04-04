@@ -156,39 +156,54 @@
     };
 
     window.handleAuth = async () => {
-    const email = document.getElementById('auth-email').value;
+    const email = document.getElementById('auth-email').value.trim();
     const pass = document.getElementById('auth-password').value;
-    const nick = document.getElementById('auth-login').value;
+    const nick = document.getElementById('auth-login').value.trim();
     const isReg = document.getElementById('auth-login').style.display !== 'none';
 
-    if (!email || !pass) return alert("Заполни почту и пароль");
+    if (!email || !pass) {
+        alert("Enter email and password");
+        return;
+    }
 
     try {
         if (isReg) {
-            if (!nick) return alert("Введите никнейм");
+            // РЕГИСТРАЦИЯ
+            console.log("Attempting registration...");
             const res = await createUserWithEmailAndPassword(auth, email, pass);
             
-            // Сразу получаем текущий счетчик ID
-            const countSnap = await get(ref(db, 'system/users_count'));
+            // Получаем новый ID
+            const countRef = ref(db, 'system/users_count');
+            const countSnap = await get(countRef);
             const newId = (countSnap.val() || 0) + 1;
-            
-            const userData = {
+
+            // Записываем данные (тут может вылетать Permission Denied, если правила БД закрыты)
+            await set(ref(db, 'users/' + res.user.uid), {
                 id: newId,
-                name: nick,
+                name: nick || email.split('@')[0],
                 role: 'Member',
                 avatar: 'https://api.dicebear.com/7.x/identicon/svg?seed=' + res.user.uid
-            };
+            });
+            await set(countRef, newId);
             
-            // ЗАПИСЫВАЕМ В БАЗУ ПЕРЕД ЗАКРЫТИЕМ
-            await set(ref(db, 'users/' + res.user.uid), userData);
-            await set(ref(db, 'system/users_count'), newId);
+            console.log("Registered successfully!");
         } else {
+            // ВХОД
+            console.log("Attempting login...");
             await signInWithEmailAndPassword(auth, email, pass);
         }
+        
         window.closeAuth();
-    } catch (e) { 
-        console.error(e);
-        alert("Ошибка: " + e.message); 
+        // Даем базе время обновиться и перезагружаем
+        setTimeout(() => location.reload(), 500);
+
+    } catch (e) {
+        console.error("Full Error Object:", e);
+        if (e.code === 'auth/invalid-credential') {
+            alert("Wrong email/password or account doesn't exist.");
+        } else {
+            alert("Error: " + e.message);
+        }
     }
 };
     window.handleSend = async () => {

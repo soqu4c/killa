@@ -3,483 +3,219 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KILLA | PROJECT</title>
+    <title>KILLA NETWORK</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:,">
 </head>
 <body>
 
-    <header class="main-header">
+<header class="main-header">
     <div class="logo">KILLA</div>
     <nav class="nav-links">
-        <button class="tab-btn active" onclick="showTab(event, 'news-section')">NEWS</button>
-        <button id="chat-tab-btn" class="tab-btn" onclick="showTab(event, 'chat-section')" style="display:none;">CHAT</button>
-        <button class="tab-btn" onclick="showTab(event, 'info-section')">INFO</button>
+        <button class="tab-btn active" onclick="window.showTab(event, 'news-section')">NEWS</button>
+        <button id="chat-tab-btn" class="tab-btn" onclick="window.showTab(event, 'chat-section')" style="display:none;">CHAT</button>
+        <button class="tab-btn" onclick="window.showTab(event, 'info-section')">INFO</button>
     </nav>
     <div class="user-area">
-        <button id="auth-btn" class="btn-login main-access-btn">ACCESS</button>
+        <button id="auth-btn" class="btn-login main-access-btn" onclick="openAuthModal()">ACCESS</button>
     </div>
 </header>
 
 <main>
-
     <section id="news-section" class="content-section active">
         <div id="news-container" class="feed-container"></div>
     </section>
 
-    <section id="info-section" class="content-section">
-        <div class="card">
-            <h3>SYSTEM INFORMATION</h3>
-            <p style="color: #444; font-size: 12px;">Infrastructure status: <span style="color: #00ff00;">ONLINE</span></p>
-            <p>Welcome to the encrypted KILLA node. All communications are protected by end-to-end encryption.</p>
-        </div>
-    </section>
     <section id="chat-section" class="content-section">
         <div id="chat-messages" class="chat-box"></div>
-        <div id="chat-input-area" class="chat-input-bar" style="display:none;">
-            <input type="text" id="chat-input" placeholder="Secure message..." onkeypress="if(event.key==='Enter') sendChatMessage()">
-            <button onclick="sendChatMessage()">SEND</button>
+    </section>
+
+    <section id="info-section" class="content-section">
+        <div class="card info-card">
+            <h3>SYSTEM STATUS: <span style="color: #00ff00;">ENCRYPTED</span></h3>
+            <p>Добро пожаловать в защищенный узел KILLA. Все сообщения шифруются.</p>
+            <p>Протокол: <b>v2.1.0-STABLE</b></p>
         </div>
     </section>
 
     <section id="cabinet-section" class="content-section">
-    <div class="card profile-card">
-        <div class="profile-main-info">
-            <img id="user-avatar-display" src="https://api.dicebear.com/7.x/identicon/svg?seed=placeholder" class="avatar-current" alt="Avatar">
-            <div class="profile-text-info">
-                <h2 id="user-display-name">---</h2>
-                <span id="user-role-badge" class="role-badge">---</span>
+        <div class="card profile-card">
+            <div class="profile-header">
+                <img id="user-avatar-display" src="" class="avatar-current">
+                <div class="profile-info">
+                    <h2 id="user-display-name">---</h2>
+                    <span id="user-role-badge" class="role-badge">---</span>
+                </div>
             </div>
-        </div>
-        
-        <div class="security-info">
-            <p>ACCESS STATUS: <span style="color:#00ff00; font-weight:900;">ACTIVE</span></p>
-            <p>SECURITY LEVEL: <span id="security-level">---</span></p>
-        </div>
-
-        <div class="post-form">
-            <h4>AVATAR CONFIG</h4>
-            <div class="avatar-selection">
-                <p>Choose an avatar component:</p>
+            <div class="stats-grid">
+                <div class="stat-item">UID: #<span id="user-id-number">---</span></div>
+                <div class="stat-item">SECURE: <span id="security-level">---</span></div>
+            </div>
+            
+            <div class="avatar-config">
+                <h4>AVATAR CONFIG</h4>
                 <div class="avatar-grid">
-                    <img src="https://api.dicebear.com/7.x/identicon/svg?seed=1" class="av-opt" onclick="setAvatar(this.src)">
-                    <img src="https://api.dicebear.com/7.x/identicon/svg?seed=2" class="av-opt" onclick="setAvatar(this.src)">
-                    <img src="https://api.dicebear.com/7.x/identicon/svg?seed=3" class="av-opt" onclick="setAvatar(this.src)">
-                    <img src="https://api.dicebear.com/7.x/identicon/svg?seed=4" class="av-opt" onclick="setAvatar(this.src)">
-                    <img src="https://api.dicebear.com/7.x/identicon/svg?seed=Killa" class="av-opt" onclick="setAvatar(this.src)">
+                    <img src="https://api.dicebear.com/7.x/identicon/svg?seed=1" onclick="window.setAvatar(this.src)">
+                    <img src="https://api.dicebear.com/7.x/identicon/svg?seed=Killa" onclick="window.setAvatar(this.src)">
+                    <img src="https://api.dicebear.com/7.x/identicon/svg?seed=Shadow" onclick="window.setAvatar(this.src)">
+                    <img src="https://api.dicebear.com/7.x/identicon/svg?seed=Tech" onclick="window.setAvatar(this.src)">
                 </div>
             </div>
+            <button class="logout-btn" onclick="window.handleLogout()">TERMINATE SESSION</button>
         </div>
-        
-        <button class="logout-btn" onclick="handleLogout()">TERMINATE SESSION</button>
-    </div>
-</section>
+    </section>
 </main>
-<div id="cabinet" class="content-section">
-    <div class="card profile-card">
-        <div class="profile-header">
-            <h2 id="user-display-name">---</h2>
-            <span id="user-role-badge" class="role-badge">MEMBER</span>
-        </div>
-        
-        <div class="stats-grid">
-            <div class="stat-item">
-                <span class="stat-label">Access Status</span>
-                <span class="stat-value" style="color: #00ff00;">Active</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">Security Level</span>
-                <span id="security-level" class="stat-value">Level 1</span>
-            </div>
-        </div>
 
-        <div class="post-form">
-            <h4>CREATE BROADCAST</h4>
-            <input type="text" id="news-title" placeholder="TITLE">
-            <textarea id="news-text" placeholder="ENCRYPTED MESSAGE..."></textarea>
-            <button class="auth-submit" onclick="publishNews()">SEND TO FEED</button>
-        </div>
-
-        <button class="logout-btn" onclick="handleLogout()">TERMINATE SESSION</button>
-    </div>
-</div>
-
-        <div id="cabinet" class="content-section">
-            <div class="card">
-                <h3>PROFILE: <span id="user-display-name">---</span></h3>
-                <p>Role: <span id="user-role-badge" class="role-badge">MEMBER</span></p>
-                
-                <hr style="border: 0; border-top: 1px solid #111; margin: 20px 0;">
-                
-                <div class="post-form">
-                    <h4>PUBLISH NEWS</h4>
-                    <input type="text" id="news-title" placeholder="ЗАГОЛОВОК">
-                    <textarea id="news-text" placeholder="ТЕКСТ НОВОСТИ..."></textarea>
-                    <button class="auth-submit" onclick="publishNews()">POST</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="settings" class="content-section">
-    <div class="card">
-        <h3>SYSTEM SETTINGS</h3>
-        <div class="avatar-selection">
-            <p>Select Avatar Component:</p>
-            <div class="avatar-grid">
-                <img src="https://api.dicebear.com/7.x/identicon/svg?seed=1" class="av-opt" onclick="setAvatar(this.src)">
-                <img src="https://api.dicebear.com/7.x/identicon/svg?seed=2" class="av-opt" onclick="setAvatar(this.src)">
-                <img src="https://api.dicebear.com/7.x/identicon/svg?seed=3" class="av-opt" onclick="setAvatar(this.src)">
-                <img src="https://api.dicebear.com/7.x/identicon/svg?seed=Killa" class="av-opt" onclick="setAvatar(this.src)">
-            </div>
-        </div>
-        <button class="auth-submit" onclick="showTab(null, 'cabinet')">SAVE CHANGES</button>
-    </div>
-</div>
-    </main>
-
-    <div id="auth-modal" class="modal-overlay" onclick="closeAuth()">
-        <div class="modal-card" onclick="event.stopPropagation()">
-            <h2 id="modal-title">SYSTEM ACCESS</h2>
-            <input type="text" id="auth-login" placeholder="NICKNAME" style="display: none;">
-            <input type="email" id="auth-email" placeholder="EMAIL">
-            <input type="password" id="auth-password" placeholder="PASSWORD">
-            <button class="auth-submit" onclick="handleAuth()">CONFIRM</button>
-            <p class="auth-switch" onclick="toggleAuthMode()">Нет аккаунта? Регистрация</p>
-        </div>
-    </div>
-
-    <div id="news-input-zone" class="chat-input-container" style="display: none;">
-    <div class="chat-inner">
-        <textarea id="news-text" placeholder="Write a broadcast message..." rows="1"></textarea>
-        <button class="send-btn" onclick="publishNews()">
-            <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
-        </button>
-    </div>
-</div>
-
-    <div id="chat-input-zone" class="chat-input-area" style="display:none;">
+<div id="chat-input-zone" class="chat-input-area" style="display:none;">
     <div class="input-wrapper">
-        <input type="text" id="chat-msg-input" placeholder="Type your message..." 
-               onkeypress="if(event.key==='Enter') handleSend()">
-        <button class="send-btn" onclick="handleSend()">
-            <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
-        </button>
+        <input type="text" id="chat-msg-input" placeholder="Type message..." onkeypress="if(event.key==='Enter') window.handleSend()">
+        <button class="send-btn" onclick="window.handleSend()">SEND</button>
     </div>
 </div>
 
-    <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
-    import { getDatabase, ref, set, get, push, onValue } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-database.js";
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getDatabase, ref, get, set, push, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    const firebaseConfig = {
+     const firebaseConfig = {
+
         apiKey: "AIzaSyASOKVgbFNStdieGXpbMuVVX3Y8P7NlY6Y",
-        authDomain: "killa-c8794.firebaseapp.com",
-        databaseURL: "https://killa-c8794-default-rtdb.firebaseio.com",
-        projectId: "killa-c8794",
-        storageBucket: "killa-c8794.firebasestorage.app",
-        messagingSenderId: "209292210267",
-        appId: "1:209292210267:web:b320358f45a21ad1284f7e",
-        measurementId: "G-BFYYQELE6C"
-    };
 
+        authDomain: "killa-c8794.firebaseapp.com",
+
+        databaseURL: "https://killa-c8794-default-rtdb.firebaseio.com",
+
+        projectId: "killa-c8794",
+
+        storageBucket: "killa-c8794.firebasestorage.app",
+
+        messagingSenderId: "209292210267",
+
+        appId: "1:209292210267:web:b320358f45a21ad1284f7e",
+
+        measurementId: "G-BFYYQELE6C"
+
+    };
     const app = initializeApp(firebaseConfig);
-    const auth = getAuth();
+    const auth = getAuth(app);
     const db = getDatabase(app);
 
-    const roleStyles = {
-    'Developer': { color: '#3eafff', level: 'Level 6 (SYSTEM CORE)' }, // Самый высокий
-    'Owner': { color: '#ff3e3e', level: 'Level 5 (ROOT)' },
-    'Dep.Owner': { color: '#ff8a3e', level: 'Level 4 (ADMIN)' },
-    'Крутой поц': { color: '#ae70ff', level: 'Level 3 (ELITE)' }, // Новая роль
-    'Member': { color: '#888', level: 'Level 1 (GUEST)' }
-};
-    // --- ГЛОБАЛЬНЫЕ ФУНКЦИИ (Для работы onclick в HTML) ---
-    
-    window.openAuthModal = () => {
-        document.getElementById('auth-modal').style.display = 'block';
-    };
-
-    window.closeAuth = () => {
-        document.getElementById('auth-modal').style.display = 'none';
-    };
-
+    // Умное переключение вкладок
     window.showTab = (event, tabId) => {
-    // Скрываем все секции
-    document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none');
-    
-    // Показываем нужную
-    const target = document.getElementById(tabId);
-    if(target) target.style.display = 'block';
+        document.querySelectorAll('.content-section').forEach(s => {
+            s.style.display = 'none';
+            s.classList.remove('active');
+        });
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        
+        const target = document.getElementById(tabId);
+        if(target) {
+            target.style.display = 'block';
+            target.classList.add('active');
+        }
+        if(event) event.currentTarget.classList.add('active');
 
-    // УПРАВЛЕНИЕ СТРОКОЙ ВВОДА
-    const inputZone = document.getElementById('chat-input-zone');
-    // Показываем только если мы в News или Chat
-    if (tabId === 'news-section' || tabId === 'chat-section') {
-        // Проверяем, залогинен ли пользователь (чтобы анонимы не видели ввод)
-        if (auth.currentUser) inputZone.style.display = 'block';
-    } else {
-        inputZone.style.display = 'none';
-    }
-};
-
-    window.toggleAuthMode = () => {
-        const loginField = document.getElementById('auth-login');
-        const title = document.getElementById('modal-title');
-        if (loginField.style.display === 'none') {
-            loginField.style.display = 'block';
-            title.innerText = 'REGISTRATION';
+        // Скрываем ввод везде, кроме News и Chat
+        const inputZone = document.getElementById('chat-input-zone');
+        if ((tabId === 'news-section' || tabId === 'chat-section') && auth.currentUser) {
+            inputZone.style.display = 'block';
         } else {
-            loginField.style.display = 'none';
-            title.innerText = 'SYSTEM ACCESS';
+            inputZone.style.display = 'none';
         }
     };
 
-    // --- ЛОГИКА АВТОРИЗАЦИИ И БД ---
+    // Отправка без ошибок "Заполни поля"
+    window.handleSend = async () => {
+        const input = document.getElementById('chat-msg-input');
+        const text = input.value.trim();
+        if(!text || !auth.currentUser) return;
 
-    onValue(ref(db, 'posts'), (snapshot) => {
-        const container = document.getElementById('news-container');
-        if (!container) return;
-        container.innerHTML = '';
-        const data = snapshot.val();
-        if (data) {
-            Object.values(data).reverse().forEach(post => {
-                const style = roleStyles[post.role] || roleStyles['Member'];
-                container.innerHTML += `
-                    <div class="card news-card">
-                        <div class="author-info">
-                            <span class="author-name">${post.author}</span>
-                            <span class="role-tag" style="color:${style.color}">[${post.role}]</span>
-                        </div>
-                        <h3>${post.title}</h3>
-                        <p>${post.text}</p>
-                    </div>`;
-            });
-        }
-    });
-
-    // Добавь эту функцию в window
-// Функция для выхода (явно прописываем в window)
-window.handleLogout = () => {
-    signOut(auth).then(() => {
-        // Закрываем вкладку кабинета и переходим на новости
-        document.getElementById('cabinet-section').style.display = 'none';
-        document.getElementById('news-section').style.display = 'block';
-        document.querySelector('.tab-btn').classList.add('active');
+        const snap = await get(ref(db, 'users/' + auth.currentUser.uid));
+        const userData = snap.val();
         
-        // Маленькая хитрость: перезагрузим страницу, чтобы сбросить все стейты
-        window.location.reload();
-    });
-};
+        const activeTab = document.querySelector('.content-section.active').id;
+        const targetPath = activeTab === 'chat-section' ? 'chat_messages' : 'posts';
 
-// Переключение меню
-window.toggleUserMenu = () => {
-    const menu = document.getElementById('user-dropdown');
-    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-};
-
-// Закрытие меню при клике вне его
-window.onclick = (e) => {
-    if (!e.target.matches('#auth-btn')) {
-        document.getElementById('user-dropdown').style.display = 'none';
-    }
-};
-
-// --- ЛОГИКА ЧАТА ---
-window.sendChatMessage = async () => {
-    const input = document.getElementById('chat-input');
-    if(!input.value.trim()) return;
-
-    const user = auth.currentUser;
-    const userRef = ref(db, 'users/' + user.uid);
-    const snap = await get(userRef);
-    const userData = snap.val();
-
-    await push(ref(db, 'chat_messages'), {
-        text: input.value,
-        author: userData.name,
-        role: userData.role,
-        time: Date.now()
-    });
-    input.value = '';
-};
-
-// Слушаем ЧАТ
-onValue(ref(db, 'chat_messages'), (snapshot) => {
-    const box = document.getElementById('chat-messages');
-    box.innerHTML = '';
-    const data = snapshot.val();
-    if(data) {
-        Object.values(data).forEach(msg => {
-            const color = roleStyles[msg.role]?.color || '#888';
-            box.innerHTML += `
-                <div class="chat-msg">
-                    <b style="color:${color}">${msg.author}:</b>
-                    <span>${msg.text}</span>
-                </div>`;
+        await push(ref(db, targetPath), {
+            text, 
+            author: userData.name, 
+            role: userData.role, 
+            timestamp: Date.now()
         });
-        box.scrollTop = box.scrollHeight;
-    }
-});
+        input.value = '';
+    };
 
-window.setAvatar = async (url) => {
-    if (!auth.currentUser) return;
-    await set(ref(db, `users/${auth.currentUser.uid}/avatar`), url);
-    
-    // Сразу обновляем картинку в кабинете
-    document.getElementById('user-avatar-display').src = url;
-    
-    alert("Avatar updated!");
-};
+    window.handleLogout = () => signOut(auth).then(() => location.reload());
 
-// --- ОБНОВЛЕНИЕ СОСТОЯНИЯ ---
-onAuthStateChanged(auth, async (user) => {
-    const authBtn = document.getElementById('auth-btn');
-    const chatTabBtn = document.getElementById('chat-tab-btn');
-    const chatInput = document.getElementById('chat-input-area');
-    
-    if (user) {
-        // 1. Получаем ссылку на юзера и сами данные
-        const userRef = ref(db, 'users/' + user.uid);
-        const snap = await get(userRef);
-        let userData = snap.val();
+    window.setAvatar = async (url) => {
+        if(!auth.currentUser) return;
+        await set(ref(db, `users/${auth.currentUser.uid}/avatar`), url);
+        document.getElementById('user-avatar-display').src = url;
+    };
 
-        // 2. Если данных почему-то нет (новый юзер), создаем их
-        if (!userData) {
-            // Логика создания нового ID (как я писал выше)
-            const countSnap = await get(ref(db, 'system/users_count'));
-            let newId = countSnap.exists() ? countSnap.val() + 1 : 1;
-            
-            userData = { 
-                id: newId, 
-                role: 'Member', 
-                name: user.email.split('@')[0],
-                avatar: 'https://api.dicebear.com/7.x/identicon/svg?seed=' + user.uid
-            };
-            await set(userRef, userData);
-            await set(ref(db, 'system/users_count'), newId);
-        }
-
-        // --- ВОТ СЮДА ДОБАВЛЯЕМ ОБНОВЛЕНИЕ ИНТЕРФЕЙСА ---
+    // Главный слушатель входа
+    onAuthStateChanged(auth, async (user) => {
+        const authBtn = document.getElementById('auth-btn');
+        const chatTabBtn = document.getElementById('chat-tab-btn');
         
-        // Отображаем порядковый ID (1, 2, 3...)
-        if (document.getElementById('user-id-number')) {
-            document.getElementById('user-id-number').innerText = userData.id;
-        }
+        if (user) {
+            const userRef = ref(db, 'users/' + user.uid);
+            const snap = await get(userRef);
+            let userData = snap.val();
 
-        // Отображаем имя
-        document.getElementById('user-display-name').innerText = userData.name;
-        
-        // Настраиваем роль и цвет (Developer > Owner)
-        const roleInfo = {
-            'Developer': { color: '#3eafff', level: 6 },
-            'Owner': { color: '#ff3e3e', level: 5 },
-            'Крутой поц': { color: '#00ff00', level: 3 }
-        }[userData.role] || { color: '#888', level: 1 };
-
-        document.getElementById('user-role-badge').innerText = userData.role;
-        document.getElementById('user-role-badge').style.color = roleInfo.color;
-        document.getElementById('security-level').innerText = "Level " + roleInfo.level;
-        
-        // -----------------------------------------------
-
-        authBtn.innerText = userData.name.toUpperCase();
-        chatTabBtn.style.display = 'inline-block';
-        if (roleInfo.level >= 3) chatInput.style.display = 'flex';
-
-    } else {
-        // Логика для гостя...
-        if (document.getElementById('user-id-number')) {
-            document.getElementById('user-id-number').innerText = "---";
-        }
-    }
-});
-
-window.setAvatar = async (url) => {
-    await set(ref(db, `users/${auth.currentUser.uid}/avatar`), url);
-    alert("Avatar updated!");
-};
-    window.handleAuth = async () => {
-        const email = document.getElementById('auth-email').value;
-        const pass = document.getElementById('auth-password').value;
-        const nick = document.getElementById('auth-login').value;
-        const isReg = document.getElementById('auth-login').style.display !== 'none';
-        const usersCountRef = ref(db, 'system/users_count');
-const countSnap = await get(usersCountRef);
-let newId = 1;
-
-if (countSnap.exists()) {
-    newId = countSnap.val() + 1;
-}
-
-// Сохраняем пользователя с новым ID
-await set(ref(db, 'users/' + user.uid), {
-    uid: user.uid,
-    id: newId, // Тот самый 1, 2, 3...
-    name: name,
-    role: 'Member',
-    avatar: 'https://api.dicebear.com/7.x/identicon/svg?seed=' + name
-});
-
-<p>USER ID: <span id="user-id-number" style="color: #3eafff;">---</span></p>
-
-// Обновляем общий счетчик в базе
-await set(usersCountRef, newId);
-
-        try {
-            if (isReg) {
-                const res = await createUserWithEmailAndPassword(auth, email, pass);
-                await updateProfile(res.user, { displayName: nick });
-                await set(ref(db, 'users/' + res.user.uid), { role: 'Member', name: nick });
-            } else {
-                await signInWithEmailAndPassword(auth, email, pass);
+            // Создание ID (1, 2, 3...)
+            if(!userData || !userData.id) {
+                const countSnap = await get(ref(db, 'system/users_count'));
+                const newId = (countSnap.val() || 0) + 1;
+                const baseData = userData || { name: user.email.split('@')[0], role: 'Member' };
+                baseData.id = newId;
+                await set(userRef, baseData);
+                await set(ref(db, 'system/users_count'), newId);
+                userData = baseData;
             }
-            window.closeAuth();
-        } catch (e) { alert(e.message); }
-    };
 
-    window.publishNews = async () => {
-        const title = document.getElementById('news-title').value;
-        const text = document.getElementById('news-text').value;
-        if(!title || !text) return alert("Заполни поля");
+            // Роли и цвета
+            const roles = {
+                'Developer': { color: '#3eafff', lv: 6 },
+                'Owner': { color: '#ff3e3e', lv: 5 },
+                'Крутой поц': { color: '#ae70ff', lv: 3 }
+            };
+            const currentRole = roles[userData.role] || { color: '#888', lv: 1 };
 
-        const userSnap = await get(ref(db, 'users/' + auth.currentUser.uid));
-        const role = userSnap.val()?.role || 'Member';
+            // Обновление интерфейса
+            document.getElementById('user-id-number').innerText = userData.id;
+            document.getElementById('user-display-name').innerText = userData.name;
+            document.getElementById('user-role-badge').innerText = userData.role;
+            document.getElementById('user-role-badge').style.color = currentRole.color;
+            document.getElementById('security-level').innerText = "Level " + currentRole.lv;
+            document.getElementById('user-avatar-display').src = userData.avatar || 'https://api.dicebear.com/7.x/identicon/svg?seed=' + user.uid;
+            
+            authBtn.innerText = userData.name.toUpperCase();
+            authBtn.classList.remove('main-access-btn');
+            authBtn.style.color = currentRole.color;
+            authBtn.style.borderColor = currentRole.color;
+            authBtn.onclick = () => window.showTab(null, 'cabinet-section');
 
-        await push(ref(db, 'posts'), {
-            title, text, role,
-            author: auth.currentUser.displayName,
-            date: Date.now()
-        });
-        alert("Опубликовано!");
-        document.getElementById('news-title').value = '';
-        document.getElementById('news-text').value = '';
-    };
-
-    // Универсальная функция отправки
-window.handleSend = async () => {
-    const input = document.getElementById('chat-msg-input');
-    const msgText = input.value.trim();
-
-    if (!msgText) return; // Больше никаких алертов "заполни поля"
-
-    const user = auth.currentUser;
-    const snap = await get(ref(db, 'users/' + user.uid));
-    const userData = snap.val();
-
-    // Определяем куда слать
-    const isChat = document.getElementById('chat-section').style.display === 'block';
-    const path = isChat ? 'chat_messages' : 'posts';
-
-    await push(ref(db, path), {
-        text: msgText,
-        author: userData.name,
-        role: userData.role,
-        timestamp: Date.now()
+            chatTabBtn.style.display = 'inline-block';
+            if (currentRole.lv >= 3) document.getElementById('chat-input-zone').style.display = 'block';
+        } else {
+            authBtn.classList.add('main-access-btn');
+            chatTabBtn.style.display = 'none';
+        }
     });
 
-    input.value = '';
-};
-
+    // Чат в реальном времени
+    onValue(ref(db, 'chat_messages'), (snap) => {
+        const box = document.getElementById('chat-messages');
+        box.innerHTML = '';
+        if(snap.exists()) {
+            Object.values(snap.val()).forEach(m => {
+                box.innerHTML += `<div class="chat-msg"><b>${m.author}:</b> ${m.text}</div>`;
+            });
+            box.scrollTop = box.scrollHeight;
+        }
+    });
 </script>
 </body>
 </html>

@@ -12,10 +12,10 @@
 <header class="main-header">
     <div class="logo">KILLA</div>
     <nav class="nav-links">
-        <button class="tab-btn active" onclick="window.showTab(event, 'news-section')">NEWS</button>
-        <button id="chat-tab-btn" class="tab-btn" onclick="window.showTab(event, 'chat-section')" style="display:none;">CHAT</button>
-        <button class="tab-btn" onclick="window.showTab(event, 'info-section')">INFO</button>
-    </nav>
+    <button class="tab-btn active" onclick="window.showTab(event, 'news-section')">NEWS</button>
+    <button id="chat-tab-btn" class="tab-btn" onclick="window.showTab(event, 'chat-section')" style="display:none;">CHAT</button>
+    <button class="tab-btn" onclick="window.showTab(event, 'info-section')">INFO</button>
+</nav>
     <div class="user-area">
         <button id="auth-btn" class="btn-login main-access-btn" onclick="window.openAuthModal()">ACCESS</button>
     </div>
@@ -125,7 +125,7 @@
     const roleStyles = {
         'Developer': { color: '#3eafff', level: 6 },
         'Owner': { color: '#ff3e3e', level: 5 },
-        'Крутой поц': { color: '#ae70ff', level: 3 },
+        'Крутой поц': { color: '#00ff00', level: 3 },
         'Member': { color: '#888', level: 1 }
     };
 
@@ -142,13 +142,24 @@
     };
 
     window.showTab = (event, tabId) => {
-    // Скрываем все секции и показываем нужную
+    // 1. Скрываем все секции контента
     document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none');
-    document.getElementById(tabId).style.display = 'block';
-
-    const inputZone = document.getElementById('chat-input-zone');
     
-    // Если это новости или чат И юзер залогинен — показываем ввод
+    // 2. Показываем нужную секцию
+    const target = document.getElementById(tabId);
+    if(target) target.style.display = 'block';
+
+    // 3. УПРАВЛЕНИЕ ПОДСВЕТКОЙ КНОПОК
+    // Удаляем класс 'active' у всех кнопок навигации
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    
+    // Если функция вызвана кликом (есть event), добавляем 'active' нажатой кнопке
+    if (event && event.currentTarget) {
+        event.currentTarget.classList.add('active');
+    }
+
+    // 4. Логика строки ввода (оставляем как была)
+    const inputZone = document.getElementById('chat-input-zone');
     if ((tabId === 'news-section' || tabId === 'chat-section') && auth.currentUser) {
         inputZone.style.display = 'block';
     } else {
@@ -260,10 +271,12 @@
 
                 // Обновляем кнопку в шапке
                 authBtn.innerText = userData.name.toUpperCase();
-                authBtn.onclick = (e) => {
-                    e.preventDefault();
-                    window.showTab(null, 'cabinet-section');
-                };
+                // Внутри onAuthStateChanged, там где кнопка меняется на никнейм:
+authBtn.onclick = (e) => {
+    // При клике на ник убираем подсветку со всех вкладок навигации
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    window.showTab(null, 'cabinet-section');
+};
 
                 // Показываем чат
                 chatTabBtn.style.display = 'inline-block';

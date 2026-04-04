@@ -9,6 +9,8 @@
 </head>
 <body>
 
+<canvas id="stars-canvas"></canvas>
+
 <header class="main-header">
     <div class="logo">KILLA</div>
     <nav class="nav-links">
@@ -19,6 +21,13 @@
     <div class="user-area">
         <button id="auth-btn" class="btn-login main-access-btn" onclick="window.openAuthModal()">ACCESS</button>
     </div>
+
+    <div class="server-status">
+    <span class="live-dot"></span>
+    <span class="status-text">NODE: <span id="node-id">KILLA-01</span></span>
+    <span class="status-text">USERS: <span id="live-users-count">0</span></span>
+</div>
+
 </header>
 
 <main>
@@ -108,6 +117,12 @@
     </div>
 </div>
 
+<div id="admin-console" style="display:none;">
+    <div class="console-header">SYSTEM TERMINAL</div>
+    <div id="console-output"></div>
+    <input type="text" id="console-input" placeholder="Enter command...">
+</div>
+
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -142,6 +157,40 @@
         'Крутой поц': { color: '#ae70ff', level: 3 },
         'Member': { color: '#888', level: 1 }
     };
+
+    const canvas = document.getElementById('stars-canvas');
+const ctx = canvas.getContext('2d');
+let stars = [];
+
+function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+for(let i=0; i<150; i++) {
+    stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: Math.random() * 2,
+        speed: Math.random() * 0.5 + 0.1
+    });
+}
+
+function animateStars() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#3eafff'; // Цвет звезд под твой стиль
+    stars.forEach(s => {
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+        ctx.fill();
+        s.y += s.speed;
+        if(s.y > canvas.height) s.y = 0;
+    });
+    requestAnimationFrame(animateStars);
+}
+animateStars();
 
     // --- ФУНКЦИИ ОКИН ---
     window.openAuthModal = () => document.getElementById('auth-modal').style.display = 'block';
@@ -290,6 +339,9 @@ authBtn.onclick = (e) => {
     window.showTab(null, 'cabinet-section');
 };
 
+            onValue(ref(db, 'system/users_count'), (snap) => {
+    document.getElementById('live-users-count').innerText = snap.val() || 0;
+});
                 // Показываем чат
                 chatTabBtn.style.display = 'inline-block';
                 
@@ -330,6 +382,14 @@ authBtn.onclick = (e) => {
     const container = document.getElementById('news-container');
     if (!container) return;
     
+    const formattedText = p.text
+    .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>') // Жирный **текст**
+    .replace(/`(.*?)`/g, '<code class="code-span">$1</code>') // Код `текст`
+    .replace(/\[(.*?)\]/g, '<span class="accent-text">$1</span>'); // [Текст] в скобках
+
+// Вставляй в innerHTML:
+// <p>${formattedText}</p>
+
     container.innerHTML = '';
     if (snap.exists()) {
         Object.values(snap.val()).reverse().forEach(p => {
@@ -364,6 +424,30 @@ window.toggleInputHeight = () => {
         icon.style.color = '#3eafff'; // Синий минус, когда открыто
     }
 };
+
+    window.addEventListener('keydown', (e) => {
+    if (e.key === '`') { // Кнопка тильда
+        const cons = document.getElementById('admin-console');
+        cons.style.display = cons.style.display === 'none' ? 'block' : 'none';
+        if(cons.style.display === 'block') document.getElementById('console-input').focus();
+    }
+});
+
+document.getElementById('console-input').addEventListener('keypress', async (e) => {
+    if (e.key === 'Enter') {
+        const cmd = e.target.value;
+        e.target.value = '';
+        
+        if (cmd === '/clear') {
+            await set(ref(db, 'chat_messages'), null);
+            alert("Chat cleared");
+        }
+        if (cmd === '/reset_id') {
+             await set(ref(db, 'system/users_count'), 0);
+             alert("IDs reseted");
+        }
+    }
+});
 
 </script>
 </body>

@@ -61,59 +61,77 @@
 
     <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
-    // Импортируем Realtime Database
-    import { getDatabase, ref, set, get, child, push, onValue } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-database.js";
+    import { getAuth, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
+    import { getDatabase, ref, set, get, push, onValue } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-database.js";
 
     const firebaseConfig = {
-        // Твои данные из image_afeda1.png
-         apiKey: "AIzaSyASOKVgbFNStdieGXpbMuVVX3Y8P7NlY6Y",
-  authDomain: "killa-c8794.firebaseapp.com",
-  databaseURL: "https://killa-c8794-default-rtdb.firebaseio.com",
-  projectId: "killa-c8794",
-  storageBucket: "killa-c8794.firebasestorage.app",
-  messagingSenderId: "209292210267",
-  appId: "1:209292210267:web:b320358f45a21ad1284f7e",
-  measurementId: "G-BFYYQELE6C"
-};
+        apiKey: "AIzaSyASOKVgbFNStdieGXpbMuVVX3Y8P7NlY6Y",
+        authDomain: "killa-c8794.firebaseapp.com",
+        databaseURL: "https://killa-c8794-default-rtdb.firebaseio.com",
+        projectId: "killa-c8794",
+        storageBucket: "killa-c8794.firebasestorage.app",
+        messagingSenderId: "209292210267",
+        appId: "1:209292210267:web:b320358f45a21ad1284f7e",
+        measurementId: "G-BFYYQELE6C"
+    };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth();
     const db = getDatabase(app);
 
-    let currentUserData = null;
-
-    // Публикация новости в Realtime Database
-    window.publishNews = () => {
-        const title = document.getElementById('news-title').value;
-        const text = document.getElementById('news-text').value;
-        if(!title || !text) return alert("Заполни поля");
-
-        const postsRef = ref(db, 'posts');
-        const newPostRef = push(postsRef); // Создает уникальный ID
-        set(newPostRef, {
-            title: title,
-            text: text,
-            author: auth.currentUser.displayName || "User",
-            role: currentUserData?.role || 'Member',
-            date: Date.now()
-        });
-
-        document.getElementById('news-title').value = '';
-        document.getElementById('news-text').value = '';
+    const roleStyles = {
+        'Owner': { color: '#ff3e3e' },
+        'Dep.Owner': { color: '#ff8a3e' },
+        'Developer': { color: '#3eafff' },
+        'Member': { color: '#888' }
     };
 
-    // Слушаем новости (Realtime!)
-    const postsRef = ref(db, 'posts');
-    onValue(postsRef, (snapshot) => {
-        const data = snapshot.val();
+    // --- ГЛОБАЛЬНЫЕ ФУНКЦИИ (Для работы onclick в HTML) ---
+    
+    window.openAuthModal = () => {
+        document.getElementById('auth-modal').style.display = 'block';
+    };
+
+    window.closeAuth = () => {
+        document.getElementById('auth-modal').style.display = 'none';
+    };
+
+    window.showTab = (event, tabId) => {
+        // Скрываем все секции
+        document.querySelectorAll('.content-section').forEach(section => {
+            section.style.display = 'none';
+            section.classList.remove('active');
+        });
+        // Убираем активный класс у кнопок
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        // Показываем нужную
+        document.getElementById(tabId).style.display = 'block';
+        if (event) event.currentTarget.classList.add('active');
+    };
+
+    window.toggleAuthMode = () => {
+        const loginField = document.getElementById('auth-login');
+        const title = document.getElementById('modal-title');
+        if (loginField.style.display === 'none') {
+            loginField.style.display = 'block';
+            title.innerText = 'REGISTRATION';
+        } else {
+            loginField.style.display = 'none';
+            title.innerText = 'SYSTEM ACCESS';
+        }
+    };
+
+    // --- ЛОГИКА АВТОРИЗАЦИИ И БД ---
+
+    onValue(ref(db, 'posts'), (snapshot) => {
         const container = document.getElementById('news-container');
+        if (!container) return;
         container.innerHTML = '';
-        
+        const data = snapshot.val();
         if (data) {
-            // Превращаем объект в массив и сортируем по дате (новые сверху)
-            const posts = Object.values(data).sort((a, b) => b.date - a.date);
-            posts.forEach(post => {
+            Object.values(data).reverse().forEach(post => {
                 const style = roleStyles[post.role] || roleStyles['Member'];
                 container.innerHTML += `
                     <div class="card news-card">
@@ -123,35 +141,72 @@
                         </div>
                         <h3>${post.title}</h3>
                         <p>${post.text}</p>
-                    </div>
-                `;
+                    </div>`;
             });
         }
     });
 
     onAuthStateChanged(auth, async (user) => {
         const cab = document.getElementById('cabinet-tab');
+        const authBtn = document.getElementById('auth-btn');
         if (user) {
-            // Получаем роль юзера
             const userRef = ref(db, 'users/' + user.uid);
-            const snapshot = await get(userRef);
-            
-            if (snapshot.exists()) {
-                currentUserData = snapshot.val();
-            } else {
-                // Если юзера нет в БД, создаем его
-                currentUserData = { role: 'Member', name: user.displayName };
-                set(userRef, currentUserData);
+            const snap = await get(userRef);
+            let userData = snap.val();
+
+            if (!userData) {
+                userData = { role: 'Member', name: user.displayName || user.email.split('@')[0] };
+                await set(userRef, userData);
             }
 
-            document.getElementById('user-display-name').innerText = user.displayName;
-            document.getElementById('user-role-badge').innerText = currentUserData.role;
-            document.getElementById('user-role-badge').style.color = roleStyles[currentUserData.role].color;
+            document.getElementById('user-display-name').innerText = userData.name;
+            const badge = document.getElementById('user-role-badge');
+            badge.innerText = userData.role;
+            badge.style.color = roleStyles[userData.role]?.color || '#888';
+            
+            authBtn.innerText = userData.name.toUpperCase();
             cab.style.display = 'block';
         } else {
-            cab.style.display = 'none';
+            if(cab) cab.style.display = 'none';
+            if(authBtn) authBtn.innerText = 'CABINET';
         }
     });
+
+    window.handleAuth = async () => {
+        const email = document.getElementById('auth-email').value;
+        const pass = document.getElementById('auth-password').value;
+        const nick = document.getElementById('auth-login').value;
+        const isReg = document.getElementById('auth-login').style.display !== 'none';
+
+        try {
+            if (isReg) {
+                const res = await createUserWithEmailAndPassword(auth, email, pass);
+                await updateProfile(res.user, { displayName: nick });
+                await set(ref(db, 'users/' + res.user.uid), { role: 'Member', name: nick });
+            } else {
+                await signInWithEmailAndPassword(auth, email, pass);
+            }
+            window.closeAuth();
+        } catch (e) { alert(e.message); }
+    };
+
+    window.publishNews = async () => {
+        const title = document.getElementById('news-title').value;
+        const text = document.getElementById('news-text').value;
+        if(!title || !text) return alert("Заполни поля");
+
+        const userSnap = await get(ref(db, 'users/' + auth.currentUser.uid));
+        const role = userSnap.val()?.role || 'Member';
+
+        await push(ref(db, 'posts'), {
+            title, text, role,
+            author: auth.currentUser.displayName,
+            date: Date.now()
+        });
+        alert("Опубликовано!");
+        document.getElementById('news-title').value = '';
+        document.getElementById('news-text').value = '';
+    };
 </script>
 </body>
 </html>

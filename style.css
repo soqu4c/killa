@@ -186,6 +186,36 @@ body {
 
 .chat-msg b { font-size: 10px; text-transform: uppercase; margin-right: 10px; color: #3eafff; }
 
+.input-broadcast-zone {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 20px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.8));
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+}
+
+/* Стеклянная панель */
+.input-glass-container {
+    width: 100%;
+    max-width: 800px;
+    background: rgba(15, 15, 15, 0.9);
+    border: 1px solid #222;
+    border-radius: 15px;
+    padding: 10px 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    backdrop-filter: blur(10px);
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.input-glass-container:focus-within {
+    border-color: #3eafff;
+    box-shadow: 0 0 15px rgba(62, 175, 255, 0.2);
+}
+
 /* Панель ввода */
 .chat-input-area {
     position: fixed;
@@ -197,19 +227,58 @@ body {
 }
 
 .input-wrapper {
-    max-width: 800px;
-    margin: 0 auto;
     display: flex;
-    gap: 10px;
+    align-items: flex-end;
+    gap: 12px;
 }
 
 #chat-msg-input {
     flex: 1;
-    background: #0a0a0a;
-    border: 1px solid #222;
-    color: #fff;
-    padding: 12px;
+    background: transparent;
+    border: none;
+    color: #eee;
+    font-family: inherit;
+    font-size: 15px;
+    padding: 10px 0;
+    resize: none;
+    max-height: 150px;
     outline: none;
+    line-height: 1.4;
+}
+
+.send-trigger {
+    background: #3eafff;
+    color: #000;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+    margin-bottom: 3px;
+}
+
+.send-trigger:hover {
+    background: #5dc0ff;
+    transform: scale(1.05);
+}
+
+.send-trigger svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* Подсказка внизу */
+.input-hint {
+    font-size: 10px;
+    color: #444;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 5px;
+    text-align: right;
 }
 
 /* --- ЛИЧНЫЙ КАБИНЕТ --- */

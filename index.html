@@ -3,14 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KILLA | PORTAL</title>
+    <title>KILLA | PROJECT</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-    <div class="welcome-top">
-        <h1 id="top-title">Welcome</h1>
-    </div>
 
     <header class="main-header">
         <div class="logo">Killa</div>
@@ -24,25 +20,29 @@
             <button class="tab-btn" id="cabinet-tab" onclick="showTab(event, 'cabinet')" style="display: none;">Private</button>
         </div>
 
-        <div class="content-wrapper">
-            <div id="news" class="content-section active">
-                <div class="card">
-                    <h3>SYSTEM INITIALIZED</h3>
-                    <p>Инфраструктура готова к работе. Все модули синхронизированы. Добро пожаловать в KILLA.</p>
-                </div>
-            </div>
+        <div id="news" class="content-section active">
+            <div id="news-container"></div>
+        </div>
 
-            <div id="info" class="content-section">
-                <div class="card">
-                    <h3>PROJECT DETAILS</h3>
-                    <p>Разработка приватного веб-интерфейса для управления VPN-узлами и ролями пользователей системы.</p>
-                </div>
+        <div id="info" class="content-section">
+            <div class="card">
+                <h3>PROJECT INFO</h3>
+                <p>Система управления ролями и контентом. Доступ только для авторизованных пользователей.</p>
             </div>
+        </div>
 
-            <div id="cabinet" class="content-section">
-                <div class="card">
-                    <h3>ACCESS LEVEL: <span id="user-role">MEMBER</span></h3>
-                    <p>Доступ разрешен. Вам открыты инструменты управления зашифрованными каналами связи.</p>
+        <div id="cabinet" class="content-section">
+            <div class="card">
+                <h3>PROFILE: <span id="user-display-name">---</span></h3>
+                <p>Role: <span id="user-role-badge" class="role-badge">MEMBER</span></p>
+                
+                <hr style="border: 0; border-top: 1px solid #111; margin: 20px 0;">
+                
+                <div class="post-form">
+                    <h4>PUBLISH NEWS</h4>
+                    <input type="text" id="news-title" placeholder="ЗАГОЛОВОК">
+                    <textarea id="news-text" placeholder="ТЕКСТ НОВОСТИ..."></textarea>
+                    <button class="auth-submit" onclick="publishNews()">POST</button>
                 </div>
             </div>
         </div>
@@ -62,95 +62,121 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
 
         const firebaseConfig = {
-    apiKey: "AIzaSyASOKVgbFNStdieGXpbMuVVX3Y8P7NlY6Y",
-    authDomain: "killa-c8794.firebaseapp.com",
-    projectId: "killa-c8794",
-    storageBucket: "killa-c8794.firebasestorage.app",
-    messagingSenderId: "209292210267",
-    appId: "1:209292210267:web:b320358f45a21ad1284f7e",
-    measurementId: "G-BFYYQELE6C"
-  };
-
+  apiKey: "AIzaSyASOKVgbFNStdieGXpbMuVVX3Y8P7NlY6Y",
+  authDomain: "killa-c8794.firebaseapp.com",
+  projectId: "killa-c8794",
+  storageBucket: "killa-c8794.firebasestorage.app",
+  messagingSenderId: "209292210267",
+  appId: "1:209292210267:web:b320358f45a21ad1284f7e",
+  measurementId: "G-BFYYQELE6C"
+};
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth();
+        const db = getFirestore(app);
 
-        let isLoginMode = true;
-        let typingTimer;
-        const texts = {
-            'news': "Инфраструктура готова к работе. Все модули синхронизированы. Добро пожаловать в KILLA.",
-            'info': "Разработка приватного веб-интерфейса для управления VPN-узлами и ролями пользователей системы.",
-            'cabinet': "Доступ разрешен. Вам открыты инструменты управления зашифрованными каналами связи."
+        let currentUserData = null;
+
+        // Роли и цвета
+        const roleStyles = {
+            'Owner': { color: '#ff3e3e', shadow: '0 0 10px rgba(255, 62, 62, 0.5)' },
+            'Dep.Owner': { color: '#ff8a3e', shadow: '0 0 10px rgba(255, 138, 62, 0.5)' },
+            'Developer': { color: '#3eafff', shadow: '0 0 10px rgba(62, 175, 255, 0.5)' },
+            'Member': { color: '#888', shadow: 'none' }
         };
 
-        window.openAuthModal = () => document.getElementById('auth-modal').style.display = 'flex';
-        window.closeAuth = () => document.getElementById('auth-modal').style.display = 'none';
-        
-        window.toggleAuthMode = () => {
-            isLoginMode = !isLoginMode;
-            document.getElementById('modal-title').innerText = isLoginMode ? "SYSTEM ACCESS" : "REGISTRATION";
-            document.getElementById('auth-login').style.display = isLoginMode ? "none" : "block";
-            document.querySelector('.auth-switch').innerText = isLoginMode ? "Нет аккаунта? Регистрация" : "Есть аккаунт? Войти";
+        // Публикация новости
+        window.publishNews = async () => {
+            const title = document.getElementById('news-title').value;
+            const text = document.getElementById('news-text').value;
+            if(!title || !text) return alert("Заполни поля");
+
+            await addDoc(collection(db, "posts"), {
+                title: title,
+                text: text,
+                author: auth.currentUser.displayName,
+                role: currentUserData.role || 'Member',
+                date: Date.now()
+            });
+            alert("Опубликовано!");
+            document.getElementById('news-title').value = '';
+            document.getElementById('news-text').value = '';
         };
 
-        window.handleAuth = () => {
+        // Подгрузка новостей в реальном времени
+        const q = query(collection(db, "posts"), orderBy("date", "desc"));
+        onSnapshot(q, (snapshot) => {
+            const container = document.getElementById('news-container');
+            container.innerHTML = '';
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                const style = roleStyles[data.role] || roleStyles['Member'];
+                container.innerHTML += `
+                    <div class="card news-card">
+                        <div class="author-info">
+                            <span class="author-name">${data.author}</span>
+                            <span class="role-tag" style="color:${style.color}; text-shadow:${style.shadow}">[${data.role}]</span>
+                        </div>
+                        <h3>${data.title}</h3>
+                        <p>${data.text}</p>
+                    </div>
+                `;
+            });
+        });
+
+        // Авторизация с сохранением роли в БД
+        window.handleAuth = async () => {
             const email = document.getElementById('auth-email').value;
             const pass = document.getElementById('auth-password').value;
             const nick = document.getElementById('auth-login').value;
-            if (isLoginMode) {
-                signInWithEmailAndPassword(auth, email, pass).then(() => closeAuth()).catch(err => alert(err.message));
-            } else {
-                createUserWithEmailAndPassword(auth, email, pass)
-                .then((res) => updateProfile(res.user, { displayName: nick }))
-                .then(() => { alert("Готово! Войдите."); toggleAuthMode(); })
-                .catch(err => alert(err.message));
-            }
+
+            try {
+                if (document.getElementById('auth-login').style.display !== 'none') {
+                    const res = await createUserWithEmailAndPassword(auth, email, pass);
+                    await updateProfile(res.user, { displayName: nick });
+                    // По умолчанию даем роль Member (ты сможешь сменить в консоли Firebase на Owner)
+                    await setDoc(doc(db, "users", res.user.uid), { role: 'Member', name: nick });
+                } else {
+                    await signInWithEmailAndPassword(auth, email, pass);
+                }
+                closeAuth();
+            } catch (e) { alert(e.message); }
         };
 
-        window.showTab = (event, tabId) => {
-            const sections = document.querySelectorAll('.content-section');
-            const buttons = document.querySelectorAll('.tab-btn');
-            sections.forEach(s => s.style.display = 'none');
-            buttons.forEach(b => b.classList.remove('active'));
-            const target = document.getElementById(tabId);
-            target.style.display = 'block';
-            typeWriter(target.querySelector('p'), texts[tabId]);
-            if (event) event.currentTarget.classList.add('active');
-        };
-
-        function typeWriter(el, text) {
-            let i = 0; el.innerHTML = ''; clearInterval(typingTimer);
-            typingTimer = setInterval(() => {
-                if (i < text.length) { el.innerHTML += text.charAt(i); i++; }
-                else clearInterval(typingTimer);
-            }, 30);
-        }
-
-        onAuthStateChanged(auth, (user) => {
-            const btn = document.getElementById('auth-btn');
+        onAuthStateChanged(auth, async (user) => {
             const cab = document.getElementById('cabinet-tab');
             if (user) {
-                btn.innerText = (user.displayName || user.email.split('@')[0]).toUpperCase();
-                btn.onclick = () => { if(confirm("Выйти?")) signOut(auth); };
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                currentUserData = userDoc.data();
+                
+                document.getElementById('user-display-name').innerText = user.displayName;
+                const badge = document.getElementById('user-role-badge');
+                badge.innerText = currentUserData.role;
+                badge.style.color = roleStyles[currentUserData.role].color;
+
+                document.getElementById('auth-btn').innerText = user.displayName.toUpperCase();
                 cab.style.display = 'block';
             } else {
-                btn.innerText = "CABINET";
-                btn.onclick = openAuthModal;
                 cab.style.display = 'none';
-                showTab(null, 'news');
+                document.getElementById('auth-btn').innerText = 'CABINET';
             }
         });
 
-        window.onload = () => {
-            typeWriter(document.querySelector('#news p'), texts['news']);
-            // Улетает через 2.5 сек и полностью исчезает
-            setTimeout(() => {
-                const w = document.querySelector('.welcome-top');
-                w.classList.add('hidden-welcome');
-                setTimeout(() => w.style.display = 'none', 600); 
-            }, 500);
+        window.showTab = (e, id) => {
+            document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).style.display = 'block';
+            if(e) e.currentTarget.classList.add('active');
+        };
+        
+        window.openAuthModal = () => document.getElementById('auth-modal').style.display = 'flex';
+        window.closeAuth = () => document.getElementById('auth-modal').style.display = 'none';
+        window.toggleAuthMode = () => {
+            const loginField = document.getElementById('auth-login');
+            loginField.style.display = loginField.style.display === 'none' ? 'block' : 'none';
         };
     </script>
 </body>

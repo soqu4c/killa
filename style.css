@@ -387,3 +387,51 @@ body {
 }
 
 .logout-btn:hover { background: #ff3e3e; color: #000; }
+
+#stars-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1; /* Чтобы был за всеми элементами */
+    background: #050505;
+}
+
+.server-status {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-family: monospace;
+    font-size: 10px;
+    color: #444;
+}
+.live-dot {
+    width: 6px;
+    height: 6px;
+    background: #00ff00;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #00ff00;
+    animation: blink 1.5s infinite;
+}
+@keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
+#admin-console {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 200px;
+    background: rgba(0, 0, 0, 0.9);
+    border-bottom: 1px solid #3eafff;
+    z-index: 9999;
+    padding: 20px;
+    font-family: 'Courier New', monospace;
+    color: #3eafff;
+}
+#console-input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: #fff;
+    outline: none;
+    border-left: 10px solid #3eafff;
+    padding-left: 10px;
+}

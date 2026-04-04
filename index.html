@@ -142,18 +142,19 @@
     };
 
     window.showTab = (event, tabId) => {
-        document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none');
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(tabId).style.display = 'block';
-        if(event) event.currentTarget.classList.add('active');
+    // Скрываем все секции и показываем нужную
+    document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none');
+    document.getElementById(tabId).style.display = 'block';
 
-        const inputZone = document.getElementById('chat-input-zone');
-        if ((tabId === 'news-section' || tabId === 'chat-section') && auth.currentUser) {
-            inputZone.style.display = 'block';
-        } else {
-            inputZone.style.display = 'none';
-        }
-    };
+    const inputZone = document.getElementById('chat-input-zone');
+    
+    // Если это новости или чат И юзер залогинен — показываем ввод
+    if ((tabId === 'news-section' || tabId === 'chat-section') && auth.currentUser) {
+        inputZone.style.display = 'block';
+    } else {
+        inputZone.style.display = 'none';
+    }
+};
 
     window.handleAuth = async () => {
     const email = document.getElementById('auth-email').value.trim();
@@ -301,22 +302,26 @@
     });
 
     onValue(ref(db, 'posts'), (snap) => {
-        const container = document.getElementById('news-container');
-        container.innerHTML = '';
-        if(snap.exists()) {
-            Object.values(snap.val()).reverse().forEach(p => {
-                const color = roleStyles[p.role]?.color || '#888';
-                container.innerHTML += `
-                    <div class="card news-card">
-                        <div class="author-info">
-                            <span class="author-name">${p.author}</span>
-                            <span style="color:${color}">[${p.role}]</span>
-                        </div>
-                        <p>${p.text}</p>
-                    </div>`;
-            });
-        }
-    });
+    const container = document.getElementById('news-container');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    if (snap.exists()) {
+        Object.values(snap.val()).reverse().forEach(p => {
+            const color = roleStyles[p.role]?.color || '#888';
+            container.innerHTML += `
+                <div class="card news-card">
+                    <div class="author-info">
+                        <span class="author-name">${p.author}</span>
+                        <span style="color:${color}">[${p.role}]</span>
+                    </div>
+                    <p>${p.text}</p>
+                </div>`;
+        });
+    } else {
+        container.innerHTML = '<p style="text-align:center; color:#444;">No broadcasts found.</p>';
+    }
+});
 </script>
 </body>
 </html>

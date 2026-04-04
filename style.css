@@ -9,13 +9,19 @@ body {
     overflow-x: hidden;
 }
 
-/* Header */
-header {
+/* Шапка - теперь всегда поверх всего */
+.main-header {
+    position: fixed;
+    top: 0;
+    width: 100%;
     padding: 20px 40px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid #111;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(10px);
+    z-index: 5000; /* Выше чем Welcome */
 }
 
 .logo { font-weight: 900; letter-spacing: 5px; text-transform: uppercase; }
@@ -32,24 +38,26 @@ header {
 
 .btn-login:hover { background: #fff; color: #000; }
 
-/* Welcome Animation */
+/* Welcome Screen */
 .welcome-top {
     height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
     position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
     background: #000;
-    z-index: 10000;
+    z-index: 4000; /* Чуть ниже шапки */
     transition: transform 1.2s cubic-bezier(0.8, 0, 0.2, 1);
 }
 
 .welcome-top h1 { font-size: 8vw; text-transform: uppercase; font-weight: 900; }
-.hidden-welcome { transform: translateY(-100%); pointer-events: none; }
+.hidden-welcome { transform: translateY(-100%); }
 
-/* Main Content */
-.main-content { padding: 60px 20px; max-width: 800px; margin: 0 auto; }
+/* Основной контент (добавил отступ сверху для шапки) */
+.main-content { padding: 120px 20px 60px; max-width: 800px; margin: 0 auto; }
 
 .tabs-nav {
     display: flex;
@@ -71,8 +79,7 @@ header {
 
 .tab-btn.active, .tab-btn:hover { color: #fff; }
 
-.content-section { display: none; opacity: 0; transition: opacity 0.5s; }
-.content-section.active { display: block; opacity: 1; }
+.content-section { display: none; }
 
 .card {
     background: #050505;
@@ -82,15 +89,15 @@ header {
 }
 
 .card h3 { font-size: 18px; margin-bottom: 20px; letter-spacing: 2px; }
-.card p { color: #555; line-height: 1.6; font-size: 14px; min-height: 50px; }
+.card p { color: #555; line-height: 1.6; font-size: 14px; white-space: pre-wrap; }
 
 /* Modal */
 .modal-overlay {
     display: none;
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.96);
-    z-index: 20000;
+    background: rgba(0,0,0,0.98);
+    z-index: 10000;
     align-items: center;
     justify-content: center;
 }
@@ -105,8 +112,6 @@ header {
     flex-direction: column;
 }
 
-.modal-card h2 { font-size: 16px; margin-bottom: 25px; text-align: center; letter-spacing: 3px; }
-
 .modal-card input {
     width: 100%;
     background: #000;
@@ -116,7 +121,6 @@ header {
     margin-bottom: 15px;
     font-family: inherit;
     outline: none;
-    display: block;
 }
 
 .auth-submit {
@@ -135,12 +139,4 @@ header {
     text-align: center;
     margin-top: 20px;
     cursor: pointer;
-}
-
-/* Adaptive */
-@media (max-width: 768px) {
-    header { padding: 15px 20px; }
-    .tabs-nav { gap: 10px; }
-    .tab-btn { font-size: 11px; }
-    .welcome-top h1 { font-size: 14vw; }
 }

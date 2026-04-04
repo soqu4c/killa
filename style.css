@@ -255,3 +255,58 @@ body {
 }
 
 .logout-btn:hover { background: #ff3e3e; color: #000; }
+
+/* Выпадающее меню */
+.user-area { position: relative; }
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0; top: 110%;
+    background: #050505;
+    border: 1px solid #111;
+    min-width: 150px;
+    z-index: 1000;
+}
+.dropdown-item {
+    padding: 12px 15px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.dropdown-item:hover { background: #111; color: #fff; }
+.dropdown-divider { height: 1px; background: #111; }
+.logout { color: #ff3e3e; }
+
+/* Поле ввода как в чате */
+.chat-input-container {
+    position: fixed;
+    bottom: 0; left: 0;
+    width: 100%;
+    padding: 20px;
+    background: linear-gradient(transparent, #000);
+    z-index: 999;
+}
+.chat-inner {
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    background: #0a0a0a;
+    border: 1px solid #1a1a1a;
+    border-radius: 5px;
+    padding: 5px 15px;
+}
+#news-text {
+    flex: 1;
+    background: none; border: none; color: #fff;
+    padding: 10px; outline: none; resize: none;
+}
+.send-btn {
+    background: none; border: none; cursor: pointer;
+    display: flex; align-items: center;
+}
+.send-btn svg { width: 20px; fill: #3eafff; }
+
+/* Аватарки */
+.avatar-grid { display: flex; gap: 10px; margin: 15px 0; }
+.av-opt { width: 50px; height: 50px; border: 1px solid #222; cursor: pointer; }
+.av-opt:hover { border-color: #fff; }

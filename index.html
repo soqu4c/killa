@@ -86,11 +86,15 @@
 </div>
 
 <div id="chat-input-zone" class="input-broadcast-zone" style="display:none;">
-    <div class="input-glass-container">
+    <button class="toggle-input-btn" onclick="window.toggleInputHeight()">
+        <span id="toggle-icon">−</span>
+    </button>
+
+    <div id="input-main-card" class="input-glass-container">
         <div class="input-wrapper">
             <textarea 
                 id="chat-msg-input" 
-                placeholder="Введите сообщение..." 
+                placeholder="Secure transmission..." 
                 rows="1"
                 oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
                 onkeypress="if(event.key==='Enter' && !event.shiftKey) { event.preventDefault(); window.handleSend(); }"></textarea>
@@ -101,7 +105,6 @@
                 </svg>
             </button>
         </div>
-        <div class="input-hint">Enter — отправить, Shift+Enter — новая строка</div>
     </div>
 </div>
 
@@ -344,6 +347,24 @@ authBtn.onclick = (e) => {
         container.innerHTML = '<p style="text-align:center; color:#444;">No broadcasts found.</p>';
     }
 });
+
+window.toggleInputHeight = () => {
+    const zone = document.getElementById('chat-input-zone');
+    const icon = document.getElementById('toggle-icon');
+    
+    // Переключаем класс minimized
+    zone.classList.toggle('minimized');
+    
+    // Меняем иконку
+    if (zone.classList.contains('minimized')) {
+        icon.innerText = '+';
+        icon.style.color = '#00ff00'; // Зеленый плюс, когда скрыто
+    } else {
+        icon.innerText = '−';
+        icon.style.color = '#3eafff'; // Синий минус, когда открыто
+    }
+};
+
 </script>
 </body>
 </html>

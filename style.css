@@ -93,31 +93,34 @@ body {
 
 /* Modal */
 .modal-overlay {
-    display: none;
+    display: none; /* Оставляем, чтобы окно скрывалось */
     position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%;
     background: rgba(0,0,0,0.98);
     z-index: 10000;
-    align-items: center;
-    justify-content: center;
-}
+    overflow-y: auto; 
 
+}
 .modal-card {
+    /* ... твои стили ... */
     background: #050505;
     border: 1px solid #111;
-    /* ПОПРАВИЛ: меньше отступ сверху (20px вместо 40px), по бокам 30px, снизу 40px */
     padding: 20px 30px 40px; 
     width: 90%;
     max-width: 350px;
     display: flex;
     flex-direction: column;
-    /* Центрируем содержимое по горизонтали */
-    align-items: center; 
+    align-items: center;
     box-sizing: border-box;
-    /* Центрируем саму модалку на экране */
+
+    /* ЭТИ СТРОКИ ОТВЕЧАЮТ ЗА ЦЕНТРИРОВАНИЕ ТЕПЕРЬ */
     position: relative;
-    left: 50%;
-    transform: translateX(-50%);
+    top: 50%; /* Сдвигаем вниз на половину экрана */
+    left: 50%; /* Сдвигаем вправо на половину экрана */
+    transform: translate(-50%, -50%); /* Сдвигаем обратно на половину собственной ширины/высоты */
 }
 
 .modal-card h2 {

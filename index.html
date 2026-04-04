@@ -60,13 +60,16 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
+    // Импортируем Realtime Database
+    import { getDatabase, ref, set, get, child, push, onValue } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-database.js";
 
-        const firebaseConfig = {
-  apiKey: "AIzaSyASOKVgbFNStdieGXpbMuVVX3Y8P7NlY6Y",
+    const firebaseConfig = {
+        // Твои данные из image_afeda1.png
+         apiKey: "AIzaSyASOKVgbFNStdieGXpbMuVVX3Y8P7NlY6Y",
   authDomain: "killa-c8794.firebaseapp.com",
+  databaseURL: "https://killa-c8794-default-rtdb.firebaseio.com",
   projectId: "killa-c8794",
   storageBucket: "killa-c8794.firebasestorage.app",
   messagingSenderId: "209292210267",
@@ -74,132 +77,81 @@
   measurementId: "G-BFYYQELE6C"
 };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth();
-        const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+    const db = getDatabase(app);
 
-        let currentUserData = null;
+    let currentUserData = null;
 
-        // Роли и цвета
-        const roleStyles = {
-            'Owner': { color: '#ff3e3e', shadow: '0 0 10px rgba(255, 62, 62, 0.5)' },
-            'Dep.Owner': { color: '#ff8a3e', shadow: '0 0 10px rgba(255, 138, 62, 0.5)' },
-            'Developer': { color: '#3eafff', shadow: '0 0 10px rgba(62, 175, 255, 0.5)' },
-            'Member': { color: '#888', shadow: 'none' }
-        };
+    // Публикация новости в Realtime Database
+    window.publishNews = () => {
+        const title = document.getElementById('news-title').value;
+        const text = document.getElementById('news-text').value;
+        if(!title || !text) return alert("Заполни поля");
 
-        // Публикация новости
-        window.publishNews = async () => {
-            const title = document.getElementById('news-title').value;
-            const text = document.getElementById('news-text').value;
-            if(!title || !text) return alert("Заполни поля");
+        const postsRef = ref(db, 'posts');
+        const newPostRef = push(postsRef); // Создает уникальный ID
+        set(newPostRef, {
+            title: title,
+            text: text,
+            author: auth.currentUser.displayName || "User",
+            role: currentUserData?.role || 'Member',
+            date: Date.now()
+        });
 
-            await addDoc(collection(db, "posts"), {
-                title: title,
-                text: text,
-                author: auth.currentUser.displayName,
-                role: currentUserData.role || 'Member',
-                date: Date.now()
-            });
-            alert("Опубликовано!");
-            document.getElementById('news-title').value = '';
-            document.getElementById('news-text').value = '';
-        };
+        document.getElementById('news-title').value = '';
+        document.getElementById('news-text').value = '';
+    };
 
-        // Подгрузка новостей в реальном времени
-        const q = query(collection(db, "posts"), orderBy("date", "desc"));
-        onSnapshot(q, (snapshot) => {
-            const container = document.getElementById('news-container');
-            container.innerHTML = '';
-            snapshot.forEach((doc) => {
-                const data = doc.data();
-                const style = roleStyles[data.role] || roleStyles['Member'];
+    // Слушаем новости (Realtime!)
+    const postsRef = ref(db, 'posts');
+    onValue(postsRef, (snapshot) => {
+        const data = snapshot.val();
+        const container = document.getElementById('news-container');
+        container.innerHTML = '';
+        
+        if (data) {
+            // Превращаем объект в массив и сортируем по дате (новые сверху)
+            const posts = Object.values(data).sort((a, b) => b.date - a.date);
+            posts.forEach(post => {
+                const style = roleStyles[post.role] || roleStyles['Member'];
                 container.innerHTML += `
                     <div class="card news-card">
                         <div class="author-info">
-                            <span class="author-name">${data.author}</span>
-                            <span class="role-tag" style="color:${style.color}; text-shadow:${style.shadow}">[${data.role}]</span>
+                            <span class="author-name">${post.author}</span>
+                            <span class="role-tag" style="color:${style.color}">[${post.role}]</span>
                         </div>
-                        <h3>${data.title}</h3>
-                        <p>${data.text}</p>
+                        <h3>${post.title}</h3>
+                        <p>${post.text}</p>
                     </div>
                 `;
             });
-        });
+        }
+    });
 
-        // Авторизация с сохранением роли в БД
-        window.handleAuth = async () => {
-            const email = document.getElementById('auth-email').value;
-            const pass = document.getElementById('auth-password').value;
-            const nick = document.getElementById('auth-login').value;
-
-            try {
-                if (document.getElementById('auth-login').style.display !== 'none') {
-                    const res = await createUserWithEmailAndPassword(auth, email, pass);
-                    await updateProfile(res.user, { displayName: nick });
-                    // По умолчанию даем роль Member (ты сможешь сменить в консоли Firebase на Owner)
-                    await setDoc(doc(db, "users", res.user.uid), { role: 'Member', name: nick });
-                } else {
-                    await signInWithEmailAndPassword(auth, email, pass);
-                }
-                closeAuth();
-            } catch (e) { alert(e.message); }
-        };
-
-        onAuthStateChanged(auth, async (user) => {
-    const cab = document.getElementById('cabinet-tab');
-    const authBtn = document.getElementById('auth-btn');
-    
-    if (user) {
-        try {
-            const userDocRef = doc(db, "users", user.uid);
-            let userSnap = await getDoc(userDocRef);
-
-            // Если записи в БД нет, создаем её (чтобы кабинет заработал)
-            if (!userSnap.exists()) {
-                await setDoc(userDocRef, { 
-                    role: 'Member', 
-                    name: user.displayName || user.email.split('@')[0] 
-                });
-                userSnap = await getDoc(userDocRef);
+    onAuthStateChanged(auth, async (user) => {
+        const cab = document.getElementById('cabinet-tab');
+        if (user) {
+            // Получаем роль юзера
+            const userRef = ref(db, 'users/' + user.uid);
+            const snapshot = await get(userRef);
+            
+            if (snapshot.exists()) {
+                currentUserData = snapshot.val();
+            } else {
+                // Если юзера нет в БД, создаем его
+                currentUserData = { role: 'Member', name: user.displayName };
+                set(userRef, currentUserData);
             }
 
-            currentUserData = userSnap.data();
-            
-            // Обновляем интерфейс
-            document.getElementById('user-display-name').innerText = user.displayName || "User";
-            const badge = document.getElementById('user-role-badge');
-            badge.innerText = currentUserData.role;
-            badge.style.color = roleStyles[currentUserData.role]?.color || '#888';
-
-            authBtn.innerText = (user.displayName || "CABINET").toUpperCase();
-            authBtn.onclick = () => { if(confirm("Log out?")) signOut(auth); };
+            document.getElementById('user-display-name').innerText = user.displayName;
+            document.getElementById('user-role-badge').innerText = currentUserData.role;
+            document.getElementById('user-role-badge').style.color = roleStyles[currentUserData.role].color;
             cab.style.display = 'block';
-            
-        } catch (error) {
-            console.error("Ошибка загрузки профиля:", error);
+        } else {
+            cab.style.display = 'none';
         }
-    } else {
-        // Если вышел из системы
-        cab.style.display = 'none';
-        authBtn.innerText = 'CABINET';
-        authBtn.onclick = openAuthModal;
-        showTab(null, 'news');
-    }
-});
-        window.showTab = (e, id) => {
-            document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none');
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(id).style.display = 'block';
-            if(e) e.currentTarget.classList.add('active');
-        };
-        
-        window.openAuthModal = () => document.getElementById('auth-modal').style.display = 'flex';
-        window.closeAuth = () => document.getElementById('auth-modal').style.display = 'none';
-        window.toggleAuthMode = () => {
-            const loginField = document.getElementById('auth-login');
-            loginField.style.display = loginField.style.display === 'none' ? 'block' : 'none';
-        };
-    </script>
+    });
+</script>
 </body>
 </html>

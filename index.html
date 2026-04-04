@@ -51,9 +51,12 @@
     <div id="auth-modal" class="modal-overlay" onclick="closeAuth()">
         <div class="modal-card" onclick="event.stopPropagation()">
             <h2 id="modal-title">SYSTEM ACCESS</h2>
+            
             <input type="text" id="auth-login" placeholder="NICKNAME" style="display: none;">
+            
             <input type="email" id="auth-email" placeholder="EMAIL">
             <input type="password" id="auth-password" placeholder="PASSWORD">
+            
             <button class="auth-submit" onclick="handleAuth()">CONFIRM</button>
             <p class="auth-switch" onclick="toggleAuthMode()">Нет аккаунта? Регистрация</p>
         </div>
@@ -62,15 +65,11 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
         import { 
-            getAuth, 
-            createUserWithEmailAndPassword, 
-            signInWithEmailAndPassword, 
-            onAuthStateChanged, 
-            signOut, 
-            updateProfile 
+            getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, 
+            onAuthStateChanged, signOut, updateProfile 
         } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
 
-        // КОНФИГ FIREBASE (Вставь свои данные сюда)
+        // КОНФИГУРАЦИЯ FIREBASE
         const firebaseConfig = {
     apiKey: "AIzaSyASOKVgbFNStdieGXpbMuVVX3Y8P7NlY6Y",
     authDomain: "killa-c8794.firebaseapp.com",
@@ -93,6 +92,7 @@
             'cabinet': "Доступ разрешен. Вам открыты инструменты управления зашифрованными каналами связи."
         };
 
+        // Функции окна
         window.openAuthModal = () => document.getElementById('auth-modal').style.display = 'flex';
         window.closeAuth = () => document.getElementById('auth-modal').style.display = 'none';
         
@@ -103,6 +103,7 @@
             document.querySelector('.auth-switch').innerText = isLoginMode ? "Нет аккаунта? Регистрация" : "Есть аккаунт? Войти";
         };
 
+        // Вход и Регистрация
         window.handleAuth = () => {
             const email = document.getElementById('auth-email').value;
             const pass = document.getElementById('auth-password').value;
@@ -115,11 +116,12 @@
             } else {
                 createUserWithEmailAndPassword(auth, email, pass)
                     .then((res) => updateProfile(res.user, { displayName: nick }))
-                    .then(() => { alert("Аккаунт создан! Теперь войдите."); toggleAuthMode(); })
-                    .catch(err => alert("Ошибка регистрации: " + err.message));
+                    .then(() => { alert("Готово! Войдите в систему."); toggleAuthMode(); })
+                    .catch(err => alert("Ошибка: " + err.message));
             }
         };
 
+        // Табы и Печатная машинка
         window.showTab = (event, tabId) => {
             const sections = document.querySelectorAll('.content-section');
             const buttons = document.querySelectorAll('.tab-btn');
@@ -141,12 +143,13 @@
             }, 30);
         }
 
+        // Следим за юзером
         onAuthStateChanged(auth, (user) => {
             const btn = document.getElementById('auth-btn');
             const cab = document.getElementById('cabinet-tab');
             if (user) {
                 btn.innerText = (user.displayName || user.email.split('@')[0]).toUpperCase();
-                btn.onclick = () => { if(confirm("Выйти из системы?")) signOut(auth); };
+                btn.onclick = () => { if(confirm("Выйти?")) signOut(auth); };
                 cab.style.display = 'block';
             } else {
                 btn.innerText = "CABINET";
@@ -158,7 +161,7 @@
 
         window.onload = () => {
             typeWriter(document.querySelector('#news p'), texts['news']);
-            setTimeout(() => document.querySelector('.welcome-top').classList.add('hidden-welcome'), 2500);
+            setTimeout(() => document.querySelector('.welcome-top').classList.add('hidden-welcome'), 2200);
         };
     </script>
 </body>

@@ -10,7 +10,7 @@
 
     <header>
         <div class="logo">Killa</div>
-        <div class="btn-login" id="auth-btn" onclick="login()">Cabinet</div>
+        <div id="auth-btn" class="btn-login" onclick="openAuthModal()">Cabinet</div>
     </header>
 
     <div class="welcome-top">
@@ -41,14 +41,45 @@
 
             <div id="cabinet" class="content-section">
                 <div class="card">
-                    <h3>ACCESS LEVEL: <span id="user-role">GUEST</span></h3>
+                    <h3>ACCESS LEVEL: <span id="user-role">MEMBER</span></h3>
                     <p id="txt-cabinet">Доступ разрешен. Вам открыты инструменты управления зашифрованными каналами связи.</p>
                 </div>
             </div>
         </div>
     </main>
 
-    <script>
+    <div id="auth-modal" class="modal-overlay" style="display: none;" onclick="closeAuth()">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <h2 id="modal-title">SYSTEM ACCESS</h2>
+            <input type="email" id="auth-email" placeholder="EMAIL">
+            <input type="password" id="auth-password" placeholder="PASSWORD">
+            <button class="auth-submit" onclick="handleAuth()">CONFIRM</button>
+            <p class="auth-switch" onclick="toggleAuthMode()">Нет аккаунта? Регистрация</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } 
+        from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
+
+        // ВСТАВЬ СВОЙ КОНФИГ ИЗ FIREBASE НИЖЕ
+     const firebaseConfig = {
+    apiKey: "AIzaSyASOKVgbFNStdieGXpbMuVVX3Y8P7NlY6Y",
+    authDomain: "killa-c8794.firebaseapp.com",
+    projectId: "killa-c8794",
+    storageBucket: "killa-c8794.firebasestorage.app",
+    messagingSenderId: "209292210267",
+    appId: "1:209292210267:web:b320358f45a21ad1284f7e",
+    measurementId: "G-BFYYQELE6C"
+  };
+  
+
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth();
+
+        let isLoginMode = true;
         let typingTimer;
         const originalTexts = {
             'news': "Инфраструктура готова к работе. Все модули синхронизированы. Добро пожаловать в KILLA.",
@@ -56,7 +87,34 @@
             'cabinet': "Доступ разрешен. Вам открыты инструменты управления зашифрованными каналами связи."
         };
 
-        function showTab(event, tabId) {
+        // Функции модального окна
+        window.openAuthModal = () => document.getElementById('auth-modal').style.display = 'flex';
+        window.closeAuth = () => document.getElementById('auth-modal').style.display = 'none';
+        
+        window.toggleAuthMode = () => {
+            isLoginMode = !isLoginMode;
+            document.getElementById('modal-title').innerText = isLoginMode ? "SYSTEM ACCESS" : "REGISTRATION";
+            document.querySelector('.auth-switch').innerText = isLoginMode ? "Нет аккаунта? Регистрация" : "Есть аккаунт? Войти";
+        };
+
+        // Обработка входа и регистрации
+        window.handleAuth = () => {
+            const email = document.getElementById('auth-email').value;
+            const pass = document.getElementById('auth-password').value;
+
+            if (isLoginMode) {
+                signInWithEmailAndPassword(auth, email, pass)
+                    .then(() => closeAuth())
+                    .catch(err => alert("Ошибка: " + err.message));
+            } else {
+                createUserWithEmailAndPassword(auth, email, pass)
+                    .then(() => closeAuth())
+                    .catch(err => alert("Ошибка: " + err.message));
+            }
+        };
+
+        // Логика табов и печати
+        window.showTab = (event, tabId) => {
             const sections = document.querySelectorAll('.content-section');
             const buttons = document.querySelectorAll('.tab-btn');
 
@@ -75,15 +133,14 @@
             }
 
             setTimeout(() => target.classList.add('active'), 10);
-            if (event) event.currentTarget.classList.add('active');
-        }
+            if (event && event.currentTarget) event.currentTarget.classList.add('active');
+        };
 
         function typeWriter(element, text) {
             let i = 0;
             element.innerText = ''; 
             element.classList.add('typewriter');
             clearInterval(typingTimer);
-
             typingTimer = setInterval(() => {
                 if (i < text.length) {
                     element.innerText += text.charAt(i);
@@ -94,35 +151,31 @@
             }, 25);
         }
 
-        function login() {
-            const code = prompt("ENTER ACCESS CODE:");
-            if (code === "1337") {
-                unlockSystem("OWNER");
-            } else if (code === "777") {
-                unlockSystem("DEVELOPER");
-            } else {
-                alert("ACCESS DENIED");
-            }
-        }
-
-        function unlockSystem(role) {
+        // Мониторинг состояния пользователя (в сети/не в сети)
+        onAuthStateChanged(auth, (user) => {
+            const authBtn = document.getElementById('auth-btn');
             const cabTab = document.getElementById('cabinet-tab');
-            cabTab.style.display = 'block';
-            document.getElementById('user-role').innerText = role;
-            document.getElementById('auth-btn').innerText = "ONLINE";
-            document.getElementById('auth-btn').style.borderColor = "#fff";
-            showTab({ currentTarget: cabTab }, 'cabinet');
-        }
 
-        // ИЗМЕНЕННАЯ ЛОГИКА ЗАГРУЗКИ:
-        window.onload = function() {
-            // 1. Начинаем печатать текст СРАЗУ (пока Welcome еще виден)
-            const firstText = document.querySelector('#news p');
-            if (firstText) {
-                typeWriter(firstText, originalTexts['news']);
+            if (user) {
+                // Если залогинен: показываем ник и открываем кабинет
+                authBtn.innerText = user.email.split('@')[0].toUpperCase();
+                authBtn.onclick = () => { if(confirm("Выйти?")) signOut(auth); };
+                cabTab.style.display = 'block';
+                // При логине сразу печатаем кабинет, если он открыт
+            } else {
+                // Если не залогинен: кнопка LOGIN и скрываем кабинет
+                authBtn.innerText = "CABINET";
+                authBtn.onclick = openAuthModal;
+                cabTab.style.display = 'none';
+                showTab(null, 'news');
             }
+        });
 
-            // 2. А Welcome убираем через задержку, как и раньше
+        // Запуск при загрузке
+        window.onload = function() {
+            const firstText = document.querySelector('#news p');
+            if (firstText) typeWriter(firstText, originalTexts['news']);
+
             setTimeout(() => {
                 const welcome = document.querySelector('.welcome-top');
                 if (welcome) welcome.classList.add('hidden-welcome');

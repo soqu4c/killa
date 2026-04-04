@@ -294,16 +294,14 @@ header {
 
 /* Стили полей ввода */
 .modal-card input {
-    width: 100%;           /* Растягиваем на всю ширину */
+    width: 100%;
     background: #000;
     border: 1px solid #222;
     padding: 14px;
     color: #fff;
-    margin-bottom: 15px;   /* Отступ между полями */
+    margin-bottom: 12px; /* Расстояние между полями */
     font-family: inherit;
-    font-size: 13px;
     box-sizing: border-box;
-    outline: none;
 }
 
 .modal-card input:focus {

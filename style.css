@@ -216,8 +216,27 @@ body {
     font-weight: 900;
 }
 
+.main-access-btn:hover {
+    background: #ccc !important;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+}
+
+.main-access-btn {
+    background: #fff !important;
+    color: #000 !important;
+    font-weight: 900 !important;
+    border: none !important;
+    padding: 8px 20px !important;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+}
+
+#cabinet-section {
+    margin-top: 80px; /* Регулируй этот параметр, чтобы опустить ниже/выше */
+}
+
 .profile-card {
-    border-top: 2px solid #fff;
+    padding-top: 40px;
 }
 
 .profile-header {

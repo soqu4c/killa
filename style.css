@@ -105,11 +105,34 @@ body {
 .modal-card {
     background: #050505;
     border: 1px solid #111;
-    padding: 40px;
+    /* ПОПРАВИЛ: меньше отступ сверху (20px вместо 40px), по бокам 30px, снизу 40px */
+    padding: 20px 30px 40px; 
     width: 90%;
     max-width: 350px;
     display: flex;
     flex-direction: column;
+    /* Центрируем содержимое по горизонтали */
+    align-items: center; 
+    box-sizing: border-box;
+    /* Центрируем саму модалку на экране */
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.modal-card h2 {
+    font-size: 16px;
+    /* ПОПРАВИЛ: Сдвигаем еще выше */
+    margin-top: 0px; 
+    /* ПОПРАВИЛ: Уменьшил отступ снизу, чтобы инпуты поджались */
+    margin-bottom: 20px; 
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #fff;
+    font-weight: 900;
+    /* ГЛАВНОЕ: центрируем текст */
+    text-align: center;
+    width: 100%;
 }
 
 .modal-card input {

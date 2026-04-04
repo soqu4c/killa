@@ -93,7 +93,7 @@ body {
 
 /* Modal */
 .modal-overlay {
-    display: none; /* Оставляем, чтобы окно скрывалось */
+    display: none; /* Переключается скриптом */
     position: fixed;
     top: 0; 
     left: 0; 
@@ -101,14 +101,12 @@ body {
     height: 100%;
     background: rgba(0,0,0,0.98);
     z-index: 10000;
-    overflow-y: auto; 
-
+    /* УБРАЛИ flex, чтобы исчезла центральная полоса */
 }
 .modal-card {
-    /* ... твои стили ... */
     background: #050505;
     border: 1px solid #111;
-    padding: 20px 30px 40px; 
+    padding: 20px 30px 40px; /* Уменьшили верхний отступ */
     width: 90%;
     max-width: 350px;
     display: flex;
@@ -116,37 +114,34 @@ body {
     align-items: center;
     box-sizing: border-box;
 
-    /* ЭТИ СТРОКИ ОТВЕЧАЮТ ЗА ЦЕНТРИРОВАНИЕ ТЕПЕРЬ */
-    position: relative;
-    top: 50%; /* Сдвигаем вниз на половину экрана */
-    left: 50%; /* Сдвигаем вправо на половину экрана */
-    transform: translate(-50%, -50%); /* Сдвигаем обратно на половину собственной ширины/высоты */
+    /* ЖЕСТКОЕ ЦЕНТРИРОВАНИЕ */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
 .modal-card h2 {
     font-size: 16px;
-    /* ПОПРАВИЛ: Сдвигаем еще выше */
-    margin-top: 0px; 
-    /* ПОПРАВИЛ: Уменьшил отступ снизу, чтобы инпуты поджались */
-    margin-bottom: 20px; 
+    margin-top: 0; /* Подняли максимально вверх */
+    margin-bottom: 25px; /* Отступ до первого поля ввода */
     letter-spacing: 3px;
     text-transform: uppercase;
     color: #fff;
     font-weight: 900;
-    /* ГЛАВНОЕ: центрируем текст */
     text-align: center;
     width: 100%;
 }
-
 .modal-card input {
     width: 100%;
     background: #000;
     border: 1px solid #222;
-    padding: 14px;
+    padding: 12px 14px;
     color: #fff;
     margin-bottom: 15px;
     font-family: inherit;
     outline: none;
+    box-sizing: border-box;
 }
 
 .auth-submit {

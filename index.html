@@ -125,7 +125,7 @@
     const roleStyles = {
         'Developer': { color: '#3eafff', level: 6 },
         'Owner': { color: '#ff3e3e', level: 5 },
-        'Крутой поц': { color: '#ae70ff', level: 3 },
+        'Крутой поц': { color: '#00ff00', level: 3 },
         'Member': { color: '#888', level: 1 }
     };
 
@@ -156,46 +156,68 @@
     };
 
     window.handleAuth = async () => {
-        const email = document.getElementById('auth-email').value;
-        const pass = document.getElementById('auth-password').value;
-        const nick = document.getElementById('auth-login').value;
-        const isReg = document.getElementById('auth-login').style.display !== 'none';
+    const email = document.getElementById('auth-email').value;
+    const pass = document.getElementById('auth-password').value;
+    const nick = document.getElementById('auth-login').value;
+    const isReg = document.getElementById('auth-login').style.display !== 'none';
 
-        try {
-            if (isReg) {
-                const res = await createUserWithEmailAndPassword(auth, email, pass);
-                const countSnap = await get(ref(db, 'system/users_count'));
-                const newId = (countSnap.val() || 0) + 1;
-                
-                const userData = {
-                    id: newId,
-                    name: nick,
-                    role: 'Member',
-                    avatar: 'https://api.dicebear.com/7.x/identicon/svg?seed=' + res.user.uid
-                };
-                await set(ref(db, 'users/' + res.user.uid), userData);
-                await set(ref(db, 'system/users_count'), newId);
-            } else {
-                await signInWithEmailAndPassword(auth, email, pass);
-            }
-            window.closeAuth();
-        } catch (e) { alert(e.message); }
-    };
+    if (!email || !pass) return alert("Заполни почту и пароль");
 
+    try {
+        if (isReg) {
+            if (!nick) return alert("Введите никнейм");
+            const res = await createUserWithEmailAndPassword(auth, email, pass);
+            
+            // Сразу получаем текущий счетчик ID
+            const countSnap = await get(ref(db, 'system/users_count'));
+            const newId = (countSnap.val() || 0) + 1;
+            
+            const userData = {
+                id: newId,
+                name: nick,
+                role: 'Member',
+                avatar: 'https://api.dicebear.com/7.x/identicon/svg?seed=' + res.user.uid
+            };
+            
+            // ЗАПИСЫВАЕМ В БАЗУ ПЕРЕД ЗАКРЫТИЕМ
+            await set(ref(db, 'users/' + res.user.uid), userData);
+            await set(ref(db, 'system/users_count'), newId);
+        } else {
+            await signInWithEmailAndPassword(auth, email, pass);
+        }
+        window.closeAuth();
+    } catch (e) { 
+        console.error(e);
+        alert("Ошибка: " + e.message); 
+    }
+};
     window.handleSend = async () => {
-        const input = document.getElementById('chat-msg-input');
-        const text = input.value.trim();
-        if(!text) return;
+    const input = document.getElementById('chat-msg-input');
+    const text = input.value.trim();
+    if (!text || !auth.currentUser) return;
 
+    try {
         const snap = await get(ref(db, 'users/' + auth.currentUser.uid));
         const userData = snap.val();
+
+        // ЗАЩИТА: Если данных в базе нет, берем временные из профиля Google
+        const authorName = userData ? userData.name : auth.currentUser.email.split('@')[0];
+        const authorRole = userData ? userData.role : 'Member';
+
         const isChat = document.getElementById('chat-section').style.display === 'block';
 
         await push(ref(db, isChat ? 'chat_messages' : 'posts'), {
-            text, author: userData.name, role: userData.role, timestamp: Date.now()
+            text: text,
+            author: authorName,
+            role: authorRole,
+            timestamp: Date.now()
         });
+        
         input.value = '';
-    };
+    } catch (e) {
+        console.error("Ошибка отправки:", e);
+    }
+};
 
     window.setAvatar = (url) => set(ref(db, `users/${auth.currentUser.uid}/avatar`), url);
     window.handleLogout = () => signOut(auth).then(() => location.reload());

@@ -239,27 +239,62 @@
 
     // --- СЛУШАТЕЛИ ---
     onAuthStateChanged(auth, async (user) => {
-        const authBtn = document.getElementById('auth-btn');
-        if (user) {
-            const snap = await get(ref(db, 'users/' + user.uid));
+    const authBtn = document.getElementById('auth-btn');
+    const chatTabBtn = document.getElementById('chat-tab-btn');
+    
+    if (user) {
+        console.log("Auth detected:", user.email);
+        
+        // 1. Сначала меняем кнопку на "Loading...", чтобы юзер видел прогресс
+        authBtn.innerText = "LOADING...";
+
+        try {
+            const userRef = ref(db, 'users/' + user.uid);
+            const snap = await get(userRef);
             const userData = snap.val();
-            if(!userData) return;
 
-            const rStyle = roleStyles[userData.role] || roleStyles['Member'];
+            if (userData) {
+                const rStyle = roleStyles[userData.role] || roleStyles['Member'];
 
-            document.getElementById('user-id-number').innerText = userData.id;
-            document.getElementById('user-display-name').innerText = userData.name;
-            document.getElementById('user-role-badge').innerText = userData.role;
-            document.getElementById('user-role-badge').style.color = rStyle.color;
-            document.getElementById('security-level').innerText = "Level " + rStyle.level;
-            document.getElementById('user-avatar-display').src = userData.avatar;
+                // Обновляем текст в кабинете
+                document.getElementById('user-id-number').innerText = userData.id;
+                document.getElementById('user-display-name').innerText = userData.name;
+                document.getElementById('user-role-badge').innerText = userData.role;
+                document.getElementById('user-role-badge').style.color = rStyle.color;
+                document.getElementById('security-level').innerText = "Level " + rStyle.level;
+                document.getElementById('user-avatar-display').src = userData.avatar || '';
 
-            authBtn.innerText = userData.name.toUpperCase();
-            authBtn.onclick = () => window.showTab(null, 'cabinet-section');
-            document.getElementById('chat-tab-btn').style.display = 'inline-block';
+                // Обновляем кнопку в шапке
+                authBtn.innerText = userData.name.toUpperCase();
+                authBtn.onclick = (e) => {
+                    e.preventDefault();
+                    window.showTab(null, 'cabinet-section');
+                };
+
+                // Показываем чат
+                chatTabBtn.style.display = 'inline-block';
+                
+                // Если мы на странице новостей/чата, показываем поле ввода
+                const currentTab = document.querySelector('.content-section[style*="block"]')?.id;
+                if (currentTab === 'news-section' || currentTab === 'chat-section') {
+                    document.getElementById('chat-input-zone').style.display = 'block';
+                }
+            } else {
+                console.warn("No user data found in DB for UID:", user.uid);
+                authBtn.innerText = "NO PROFILE";
+            }
+        } catch (e) {
+            console.error("Database error:", e);
+            authBtn.innerText = "DB ERROR";
         }
-    });
-
+    } else {
+        // Если юзер не залогинен
+        authBtn.innerText = "ACCESS";
+        authBtn.onclick = () => window.openAuthModal();
+        chatTabBtn.style.display = 'none';
+        document.getElementById('chat-input-zone').style.display = 'none';
+    }
+});
     onValue(ref(db, 'chat_messages'), (snap) => {
         const box = document.getElementById('chat-messages');
         box.innerHTML = '';

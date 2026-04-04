@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KILLA | OFFICIAL</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <div class="logo">Killa</div>
+        <div class="btn-login" id="auth-btn" onclick="login()">Cabinet</div>
+    </header>
+
+    <div class="welcome-top">
+        <h1 id="top-title">Welcome</h1>
+    </div>
+
+    <main class="main-content">
+        <div class="tabs-nav">
+            <button class="tab-btn active" id="news-tab" onclick="showTab(event, 'news')">News</button>
+            <button class="tab-btn" onclick="showTab(event, 'info')">Info</button>
+            <button class="tab-btn" id="cabinet-tab" onclick="showTab(event, 'cabinet')" style="display: none;">Private</button>
+        </div>
+
+        <div class="content-wrapper">
+            <div id="news" class="content-section active">
+                <div class="card">
+                    <h3>SYSTEM INITIALIZED</h3>
+                    <p id="txt-news">Инфраструктура готова к работе. Все модули синхронизированы. Добро пожаловать в KILLA.</p>
+                </div>
+            </div>
+
+            <div id="info" class="content-section">
+                <div class="card">
+                    <h3>PROJECT DETAILS</h3>
+                    <p id="txt-info">Разработка приватного веб-интерфейса для управления VPN-узлами и ролями пользователей системы.</p>
+                </div>
+            </div>
+
+            <div id="cabinet" class="content-section">
+                <div class="card">
+                    <h3>ACCESS LEVEL: <span id="user-role">GUEST</span></h3>
+                    <p id="txt-cabinet">Доступ разрешен. Вам открыты инструменты управления зашифрованными каналами связи.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let typingTimer;
+        const originalTexts = {
+            'news': "Инфраструктура готова к работе. Все модули синхронизированы. Добро пожаловать в KILLA.",
+            'info': "Разработка приватного веб-интерфейса для управления VPN-узлами и ролями пользователей системы.",
+            'cabinet': "Доступ разрешен. Вам открыты инструменты управления зашифрованными каналами связи."
+        };
+
+        function showTab(event, tabId) {
+            const sections = document.querySelectorAll('.content-section');
+            const buttons = document.querySelectorAll('.tab-btn');
+
+            sections.forEach(s => {
+                s.style.display = 'none';
+                s.classList.remove('active');
+            });
+            buttons.forEach(b => b.classList.remove('active'));
+
+            const target = document.getElementById(tabId);
+            target.style.display = 'block';
+            
+            const textElement = target.querySelector('p');
+            if (textElement) {
+                typeWriter(textElement, originalTexts[tabId]);
+            }
+
+            setTimeout(() => target.classList.add('active'), 10);
+            if (event) event.currentTarget.classList.add('active');
+        }
+
+        function typeWriter(element, text) {
+            let i = 0;
+            element.innerText = ''; 
+            element.classList.add('typewriter');
+            clearInterval(typingTimer);
+
+            typingTimer = setInterval(() => {
+                if (i < text.length) {
+                    element.innerText += text.charAt(i);
+                    i++;
+                } else {
+                    clearInterval(typingTimer);
+                }
+            }, 25);
+        }
+
+        function login() {
+            const code = prompt("ENTER ACCESS CODE:");
+            if (code === "1337") {
+                unlockSystem("OWNER");
+            } else if (code === "777") {
+                unlockSystem("DEVELOPER");
+            } else {
+                alert("ACCESS DENIED");
+            }
+        }
+
+        function unlockSystem(role) {
+            const cabTab = document.getElementById('cabinet-tab');
+            cabTab.style.display = 'block';
+            document.getElementById('user-role').innerText = role;
+            document.getElementById('auth-btn').innerText = "ONLINE";
+            document.getElementById('auth-btn').style.borderColor = "#fff";
+            showTab({ currentTarget: cabTab }, 'cabinet');
+        }
+
+        // ИЗМЕНЕННАЯ ЛОГИКА ЗАГРУЗКИ:
+        window.onload = function() {
+            // 1. Начинаем печатать текст СРАЗУ (пока Welcome еще виден)
+            const firstText = document.querySelector('#news p');
+            if (firstText) {
+                typeWriter(firstText, originalTexts['news']);
+            }
+
+            // 2. А Welcome убираем через задержку, как и раньше
+            setTimeout(() => {
+                const welcome = document.querySelector('.welcome-top');
+                if (welcome) welcome.classList.add('hidden-welcome');
+            }, 2500); 
+        };
+    </script>
+</body>
+</html>

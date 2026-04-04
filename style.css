@@ -1,0 +1,264 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;900&display=swap');
+
+* { 
+    box-sizing: border-box; 
+    /* Плавность для всех изменений, включая высоту и отступы */
+    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1); 
+}
+
+body {
+    background-color: #000;
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+}
+
+header {
+    width: 100%;
+    max-width: 1200px;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo { font-weight: 900; letter-spacing: 5px; font-size: 18px; text-transform: uppercase; }
+
+/* Блок приветствия */
+.welcome-top {
+    text-align: center;
+    overflow: hidden; /* Важно: чтобы текст не вылезал при схлопывании */
+    max-height: 200px; 
+    opacity: 1;
+    margin-top: 40px;
+    margin-bottom: 20px;
+}
+
+.welcome-top h1 {
+    font-size: clamp(40px, 8vw, 70px);
+    font-weight: 900;
+    margin: 0;
+    letter-spacing: -3px;
+    text-transform: uppercase;
+}
+
+/* КЛАСС СКРЫТИЯ: заставляет контент подняться */
+.hidden-welcome {
+    opacity: 0;
+    max-height: 0;   /* Схлопываем высоту */
+    margin-top: 0;   /* Убираем отступы */
+    margin-bottom: 0;
+    pointer-events: none;
+}
+
+/* Основной контент (новости и табы) */
+.main-content {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* Создаем контекст наложения */
+    position: relative; 
+}
+
+.content-wrapper {
+    position: relative;
+    width: 100%;
+    margin-top: 30px; /* Расстояние от NEWS/INFO до карточки */
+    min-height: 250px; /* Резервируем место под самую большую карточку */
+}
+
+.tabs-nav {
+    display: flex;
+    gap: 25px; /* Чуть уменьшил отступ, так как текст стал больше */
+    margin-top: 30px;
+    width: 100%;
+    max-width: 600px;
+    justify-content: center;
+    align-items: center; /* !!! ВЫРАВНИВАНИЕ ПО ОДНОМУ УРОВНЮ !!! */
+    /* Убрал нижнюю границу, чтобы активная кнопка не прыгала */
+}
+.tab-btn {
+    background: none;
+    border: none;
+    color: #333; /* Неактивный цвет */
+    padding: 10px 0; /* Уменьшил вертикальный паддинг */
+    
+    /* !!! УВЕЛИЧИВАЕМ РАЗМЕР ШРИФТА !!! */
+    font-size: 14px; /* Было 11px, стало 14px */
+    
+    font-weight: 900; /* Максимальная жирность */
+    text-transform: uppercase;
+    letter-spacing: 1px; /* Чуть меньше разнос букв для баланса */
+    cursor: pointer;
+    position: relative;
+    transition: color 0.3s ease;
+}
+
+.tab-btn:hover {
+    color: #666;
+}
+
+.tab-btn.active {
+    color: #fff; /* Белый для обычных */
+}
+
+#cabinet-tab {
+    display: none; /* Скрыта по умолчанию */
+    color: #660000; /* Неактивный красный */
+}
+
+/* Активная вкладка Private */
+#cabinet-tab.active {
+    color: #ff4444; /* Яркий красный */
+}
+
+.card {
+    background: #050505;
+    border: 1px solid #111;
+    padding: 30px;
+    border-radius: 4px;
+    min-height: 180px; /* Одинаковая высота карточек */
+}
+
+.card h3 { 
+    font-size: 20px; 
+    margin: 0 0 15px 0; 
+    font-weight: 900; 
+    text-transform: uppercase;
+}
+
+.card p { 
+    color: #555; 
+    line-height: 1.6; 
+    font-size: 14px; 
+    margin: 0; 
+}
+
+.card h3 { font-size: 20px; margin: 0 0 10px 0; font-weight: 900; }
+.card p { color: #555; line-height: 1.6; font-size: 14px; margin: 0; }
+
+/* ... (весь предыдущий код остается) ... */
+
+/* Анимация появления контента при переключении вкладок */
+.content-section {
+    width: 100%;
+    /* Абсолютное позиционирование заставляет все секции 
+       накладываться друг на друга в одной точке */
+    position: absolute;
+    top: 0;
+    left: 0;
+    
+    display: none;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
+/* Класс для активной секции с анимацией */
+.content-section.active {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Стили для скрытой кнопки Private */
+#cabinet-tab {
+    display: none; /* Скрыта до авторизации */
+    color: #ff4444; /* Можно выделить цветом для интереса */
+}
+
+/* Теги ролей в кабинете */
+.role-badge {
+    background: #fff;
+    color: #000;
+    padding: 2px 8px;
+    font-size: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    border-radius: 2px;
+    margin-left: 10px;
+}
+
+/* Эффект курсора */
+.typewriter::after {
+    content: '|';
+    animation: blink 0.7s infinite;
+    margin-left: 2px;
+    color: #fff;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+/* Убираем стандартную анимацию появления для текста, 
+   так как теперь у нас будет анимация печати */
+.content-section .card p {
+    opacity: 1;
+    transform: none;
+}
+
+/* --- МОБИЛЬНАЯ ВЕРСИЯ --- */
+@media (max-width: 768px) {
+    
+    header {
+        padding: 15px;
+    }
+
+    .logo {
+        font-size: 16px;
+        letter-spacing: 3px;
+    }
+
+    /* Уменьшаем Welcome для телефона */
+    .welcome-top h1 {
+        font-size: 38px; /* Оптимально для узких экранов */
+        letter-spacing: -1px;
+    }
+
+    .welcome-top {
+        margin-top: 20px;
+        max-height: 100px; /* Уменьшаем высоту для схлопывания */
+    }
+
+    /* Адаптируем табы */
+    .tabs-nav {
+        gap: 15px; /* Меньше расстояние между кнопками */
+        padding: 0 10px;
+    }
+
+    .tab-btn {
+        font-size: 12px; /* Чуть меньше шрифт */
+    }
+
+    /* Контент на весь экран */
+    .main-content {
+        padding: 0 15px;
+    }
+
+    .content-wrapper {
+        margin-top: 20px;
+        min-height: 300px; /* На мобилках текст длиннее, резервируем больше места */
+    }
+
+    .card {
+        padding: 20px;
+        min-height: 150px;
+    }
+
+    .card h3 {
+        font-size: 16px;
+    }
+
+    .card p {
+        font-size: 13px;
+        line-height: 1.5;
+    }
+}

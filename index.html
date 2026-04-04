@@ -161,49 +161,42 @@
     const nick = document.getElementById('auth-login').value.trim();
     const isReg = document.getElementById('auth-login').style.display !== 'none';
 
-    if (!email || !pass) {
-        alert("Enter email and password");
-        return;
-    }
+    if (!email || !pass) return alert("Fill in all fields");
 
     try {
         if (isReg) {
-            // РЕГИСТРАЦИЯ
-            console.log("Attempting registration...");
+            console.log("Creating user...");
             const res = await createUserWithEmailAndPassword(auth, email, pass);
             
-            // Получаем новый ID
+            console.log("Getting ID counter...");
             const countRef = ref(db, 'system/users_count');
             const countSnap = await get(countRef);
             const newId = (countSnap.val() || 0) + 1;
 
-            // Записываем данные (тут может вылетать Permission Denied, если правила БД закрыты)
-            await set(ref(db, 'users/' + res.user.uid), {
+            const userData = {
                 id: newId,
                 name: nick || email.split('@')[0],
                 role: 'Member',
                 avatar: 'https://api.dicebear.com/7.x/identicon/svg?seed=' + res.user.uid
-            });
+            };
+
+            console.log("Saving to Database...");
+            // КРИТИЧЕСКИЙ МОМЕНТ: Записываем данные в базу
+            await set(ref(db, 'users/' + res.user.uid), userData);
             await set(countRef, newId);
             
-            console.log("Registered successfully!");
+            console.log("DB Write Success!");
         } else {
-            // ВХОД
-            console.log("Attempting login...");
             await signInWithEmailAndPassword(auth, email, pass);
         }
         
         window.closeAuth();
-        // Даем базе время обновиться и перезагружаем
-        setTimeout(() => location.reload(), 500);
+        setTimeout(() => location.reload(), 300);
 
     } catch (e) {
-        console.error("Full Error Object:", e);
-        if (e.code === 'auth/invalid-credential') {
-            alert("Wrong email/password or account doesn't exist.");
-        } else {
-            alert("Error: " + e.message);
-        }
+        console.error("Auth/DB Error:", e);
+        // Если ошибка здесь, значит данные не записались в базу!
+        alert("Action failed: " + e.message);
     }
 };
     window.handleSend = async () => {

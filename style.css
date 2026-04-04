@@ -79,13 +79,24 @@ body {
 
 .tab-btn.active, .tab-btn:hover { color: #fff; }
 
-.content-section { display: none; }
+.content-section {
+    display: none;
+    width: 100%;
+    max-width: 900px;
+    margin: 80px auto 0 auto; /* Опускаем ниже шапки и центрируем */
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+#info-section {
+    text-align: left; /* Чтобы текст не разлетался */
+}
 
 .card {
-    background: #050505;
+    background: rgba(10, 10, 10, 0.8);
     border: 1px solid #111;
-    padding: 40px;
-    min-height: 200px;
+    padding: 30px;
+    border-radius: 4px;
 }
 
 .card h3 { font-size: 18px; margin-bottom: 20px; letter-spacing: 2px; }

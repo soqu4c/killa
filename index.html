@@ -8,14 +8,14 @@
 </head>
 <body>
 
-    <header>
-        <div class="logo">Killa</div>
-        <div id="auth-btn" class="btn-login" onclick="openAuthModal()">Cabinet</div>
-    </header>
-
     <div class="welcome-top">
         <h1 id="top-title">Welcome</h1>
     </div>
+
+    <header class="main-header">
+        <div class="logo">Killa</div>
+        <div id="auth-btn" class="btn-login" onclick="openAuthModal()">Cabinet</div>
+    </header>
 
     <main class="main-content">
         <div class="tabs-nav">
@@ -51,12 +51,9 @@
     <div id="auth-modal" class="modal-overlay" onclick="closeAuth()">
         <div class="modal-card" onclick="event.stopPropagation()">
             <h2 id="modal-title">SYSTEM ACCESS</h2>
-            
             <input type="text" id="auth-login" placeholder="NICKNAME" style="display: none;">
-            
             <input type="email" id="auth-email" placeholder="EMAIL">
             <input type="password" id="auth-password" placeholder="PASSWORD">
-            
             <button class="auth-submit" onclick="handleAuth()">CONFIRM</button>
             <p class="auth-switch" onclick="toggleAuthMode()">Нет аккаунта? Регистрация</p>
         </div>
@@ -64,12 +61,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
-        import { 
-            getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, 
-            onAuthStateChanged, signOut, updateProfile 
-        } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
 
-        // КОНФИГУРАЦИЯ FIREBASE
         const firebaseConfig = {
     apiKey: "AIzaSyASOKVgbFNStdieGXpbMuVVX3Y8P7NlY6Y",
     authDomain: "killa-c8794.firebaseapp.com",
@@ -92,7 +85,6 @@
             'cabinet': "Доступ разрешен. Вам открыты инструменты управления зашифрованными каналами связи."
         };
 
-        // Функции окна
         window.openAuthModal = () => document.getElementById('auth-modal').style.display = 'flex';
         window.closeAuth = () => document.getElementById('auth-modal').style.display = 'none';
         
@@ -103,47 +95,39 @@
             document.querySelector('.auth-switch').innerText = isLoginMode ? "Нет аккаунта? Регистрация" : "Есть аккаунт? Войти";
         };
 
-        // Вход и Регистрация
         window.handleAuth = () => {
             const email = document.getElementById('auth-email').value;
             const pass = document.getElementById('auth-password').value;
             const nick = document.getElementById('auth-login').value;
-
             if (isLoginMode) {
-                signInWithEmailAndPassword(auth, email, pass)
-                    .then(() => closeAuth())
-                    .catch(err => alert("Ошибка входа: " + err.message));
+                signInWithEmailAndPassword(auth, email, pass).then(() => closeAuth()).catch(err => alert(err.message));
             } else {
                 createUserWithEmailAndPassword(auth, email, pass)
-                    .then((res) => updateProfile(res.user, { displayName: nick }))
-                    .then(() => { alert("Готово! Войдите в систему."); toggleAuthMode(); })
-                    .catch(err => alert("Ошибка: " + err.message));
+                .then((res) => updateProfile(res.user, { displayName: nick }))
+                .then(() => { alert("Готово! Войдите."); toggleAuthMode(); })
+                .catch(err => alert(err.message));
             }
         };
 
-        // Табы и Печатная машинка
         window.showTab = (event, tabId) => {
             const sections = document.querySelectorAll('.content-section');
             const buttons = document.querySelectorAll('.tab-btn');
-            sections.forEach(s => { s.style.display = 'none'; s.classList.remove('active'); });
+            sections.forEach(s => s.style.display = 'none');
             buttons.forEach(b => b.classList.remove('active'));
-
             const target = document.getElementById(tabId);
             target.style.display = 'block';
             typeWriter(target.querySelector('p'), texts[tabId]);
-            setTimeout(() => target.classList.add('active'), 10);
             if (event) event.currentTarget.classList.add('active');
         };
 
         function typeWriter(el, text) {
-            let i = 0; el.innerText = ''; clearInterval(typingTimer);
+            let i = 0; el.innerHTML = ''; clearInterval(typingTimer);
             typingTimer = setInterval(() => {
-                if (i < text.length) { el.innerText += text.charAt(i); i++; }
+                if (i < text.length) { el.innerHTML += text.charAt(i); i++; }
                 else clearInterval(typingTimer);
             }, 30);
         }
 
-        // Следим за юзером
         onAuthStateChanged(auth, (user) => {
             const btn = document.getElementById('auth-btn');
             const cab = document.getElementById('cabinet-tab');
@@ -161,7 +145,12 @@
 
         window.onload = () => {
             typeWriter(document.querySelector('#news p'), texts['news']);
-            setTimeout(() => document.querySelector('.welcome-top').classList.add('hidden-welcome'), 2200);
+            // Улетает через 2.5 сек и полностью исчезает
+            setTimeout(() => {
+                const w = document.querySelector('.welcome-top');
+                w.classList.add('hidden-welcome');
+                setTimeout(() => w.style.display = 'none', 1200); 
+            }, 2500);
         };
     </script>
 </body>

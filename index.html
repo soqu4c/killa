@@ -85,12 +85,23 @@
     </div>
 </div>
 
-<div id="chat-input-zone" class="chat-input-area" style="display:none;">
-    <div class="input-wrapper">
-        <input type="text" id="chat-msg-input" placeholder="Type message..." onkeypress="if(event.key==='Enter') window.handleSend()">
-        <button class="send-btn" onclick="window.handleSend()">
-            <svg viewBox="0 0 24 24" width="20" fill="#3eafff"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
-        </button>
+<div id="chat-input-zone" class="input-broadcast-zone" style="display:none;">
+    <div class="input-glass-container">
+        <div class="input-wrapper">
+            <textarea 
+                id="chat-msg-input" 
+                placeholder="Введите сообщение..." 
+                rows="1"
+                oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
+                onkeypress="if(event.key==='Enter' && !event.shiftKey) { event.preventDefault(); window.handleSend(); }"></textarea>
+            
+            <button class="send-trigger" onclick="window.handleSend()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                </svg>
+            </button>
+        </div>
+        <div class="input-hint">Enter — отправить, Shift+Enter — новая строка</div>
     </div>
 </div>
 
@@ -125,7 +136,7 @@
     const roleStyles = {
         'Developer': { color: '#3eafff', level: 6 },
         'Owner': { color: '#ff3e3e', level: 5 },
-        'Крутой поц': { color: '#ae70ff', level: 3 },
+        'Крутой поц': { color: '#00ff00', level: 3 },
         'Member': { color: '#888', level: 1 }
     };
 
@@ -220,22 +231,20 @@
         const snap = await get(ref(db, 'users/' + auth.currentUser.uid));
         const userData = snap.val();
 
-        // ЗАЩИТА: Если данных в базе нет, берем временные из профиля Google
-        const authorName = userData ? userData.name : auth.currentUser.email.split('@')[0];
-        const authorRole = userData ? userData.role : 'Member';
-
         const isChat = document.getElementById('chat-section').style.display === 'block';
 
         await push(ref(db, isChat ? 'chat_messages' : 'posts'), {
             text: text,
-            author: authorName,
-            role: authorRole,
+            author: userData.name,
+            role: userData.role,
             timestamp: Date.now()
         });
-        
+
+        // СБРОС ПОЛЯ
         input.value = '';
+        input.style.height = 'auto'; // Возвращаем высоту в исходное состояние
     } catch (e) {
-        console.error("Ошибка отправки:", e);
+        console.error(e);
     }
 };
 

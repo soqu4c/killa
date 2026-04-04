@@ -48,9 +48,10 @@
         </div>
     </main>
 
-    <div id="auth-modal" class="modal-overlay" style="display: none;" onclick="closeAuth()">
-        <div class="modal-card" onclick="event.stopPropagation()">
+    <div class="modal-card" onclick="event.stopPropagation()">
     <h2 id="modal-title">REGISTRATION</h2>
+    <input type="text" id="auth-login" placeholder="NICKNAME" style="display: block;">
+    
     <input type="email" id="auth-email" placeholder="EMAIL">
     <input type="password" id="auth-password" placeholder="PASSWORD">
     <button class="auth-submit" onclick="handleAuth()">CONFIRM</button>
@@ -59,6 +60,14 @@
     </div>
 
     <script type="module">
+        import { 
+    getAuth, 
+    createUserWithEmailAndPassword, 
+    signInWithEmailAndPassword, 
+    onAuthStateChanged, 
+    signOut,
+    updateProfile // <-- Добавь это
+} from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } 
         from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
@@ -99,19 +108,31 @@
 
         // Обработка входа и регистрации
         window.handleAuth = () => {
-            const email = document.getElementById('auth-email').value;
-            const pass = document.getElementById('auth-password').value;
+    const email = document.getElementById('auth-email').value;
+    const pass = document.getElementById('auth-password').value;
 
-            if (isLoginMode) {
-                signInWithEmailAndPassword(auth, email, pass)
-                    .then(() => closeAuth())
-                    .catch(err => alert("Ошибка: " + err.message));
-            } else {
-                createUserWithEmailAndPassword(auth, email, pass)
-                    .then(() => closeAuth())
-                    .catch(err => alert("Ошибка: " + err.message));
-            }
-        };
+    if (isLoginMode) {
+        signInWithEmailAndPassword(auth, email, pass)
+            .then(() => {
+                closeAuth(); // Закрываем окно при успешном входе
+            })
+            .catch(err => alert("Ошибка входа: " + err.message));
+    } else {
+        createUserWithEmailAndPassword(auth, email, pass)
+            .then(() => {
+                alert("Аккаунт создан! Теперь войдите."); // Уведомляем пользователя
+                toggleAuthMode(); // Переключаем на экран входа
+            })
+            .catch(err => {
+                // Если почта занята, просто говорим об этом понятнее
+                if (err.code === 'auth/email-already-in-use') {
+                    alert("Этот email уже зарегистрирован. Переключитесь на 'Войти'.");
+                } else {
+                    alert("Ошибка: " + err.message);
+                }
+            });
+    }
+};
 
         // Логика табов и печати
         window.showTab = (event, tabId) => {
@@ -170,6 +191,60 @@
                 showTab(null, 'news');
             }
         });
+
+        window.toggleAuthMode = () => {
+    isLoginMode = !isLoginMode;
+    const loginInput = document.getElementById('auth-login');
+    document.getElementById('modal-title').innerText = isLoginMode ? "SYSTEM ACCESS" : "REGISTRATION";
+    document.querySelector('.auth-switch').innerText = isLoginMode ? "Нет аккаунта? Регистрация" : "Есть аккаунт? Войти";
+    
+    // Скрываем поле логина при входе, показываем при регистрации
+    loginInput.style.display = isLoginMode ? "none" : "block";
+};
+
+window.handleAuth = () => {
+    const email = document.getElementById('auth-email').value;
+    const pass = document.getElementById('auth-password').value;
+    const nickname = document.getElementById('auth-login').value;
+
+    if (isLoginMode) {
+        signInWithEmailAndPassword(auth, email, pass)
+            .then(() => closeAuth())
+            .catch(err => alert("Ошибка: " + err.message));
+    } else {
+        // РЕГИСТРАЦИЯ
+        createUserWithEmailAndPassword(auth, email, pass)
+            .then((userCredential) => {
+                // Сразу после создания аккаунта сохраняем логин
+                return updateProfile(userCredential.user, {
+                    displayName: nickname
+                });
+            })
+            .then(() => {
+                alert("Аккаунт создан! Теперь войдите.");
+                toggleAuthMode();
+            })
+            .catch(err => alert("Ошибка: " + err.message));
+    }
+};
+
+// Обновим отображение ника в шапке
+onAuthStateChanged(auth, (user) => {
+    const authBtn = document.getElementById('auth-btn');
+    const cabTab = document.getElementById('cabinet-tab');
+
+    if (user) {
+        // Если у пользователя есть displayName, пишем его. Если нет — часть почты.
+        authBtn.innerText = (user.displayName || user.email.split('@')[0]).toUpperCase();
+        authBtn.onclick = () => { if(confirm("Выйти?")) signOut(auth); };
+        cabTab.style.display = 'block';
+    } else {
+        authBtn.innerText = "CABINET";
+        authBtn.onclick = openAuthModal;
+        cabTab.style.display = 'none';
+        showTab(null, 'news');
+    }
+});
 
         // Запуск при загрузке
         window.onload = function() {

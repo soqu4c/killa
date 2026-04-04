@@ -310,3 +310,38 @@ body {
 .avatar-grid { display: flex; gap: 10px; margin: 15px 0; }
 .av-opt { width: 50px; height: 50px; border: 1px solid #222; cursor: pointer; }
 .av-opt:hover { border-color: #fff; }
+
+/* Контейнер сообщений чата */
+.chat-box {
+    height: 60vh;
+    overflow-y: auto;
+    padding: 15px;
+    background: #050505;
+    border: 1px solid #111;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Стиль сообщения в чате */
+.chat-msg {
+    font-size: 13px;
+    line-height: 1.4;
+    padding: 5px 10px;
+    border-left: 1px solid #333;
+}
+.chat-msg b { font-size: 11px; text-transform: uppercase; margin-right: 8px; }
+
+/* Полоса ввода внизу чата */
+.chat-input-bar {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    background: #0a0a0a;
+    padding: 10px;
+    border: 1px solid #1a1a1a;
+}
+.chat-input-bar input {
+    flex: 1;
+    background: none; border: none; color: #fff; outline: none;
+}

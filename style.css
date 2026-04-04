@@ -278,8 +278,9 @@ header {
     text-align: center;
     /* Центрируем саму модалку */
     display: flex;
-    flex-direction: column;
+    flex-direction: column; /* Это заставит элементы встать друг под друга */
     align-items: center;
+    box-sizing: border-box;
 }
 
 .modal-card h2 { 
@@ -288,27 +289,12 @@ header {
     margin-bottom: 25px; 
 }
 
-.modal-card input {
-    width: 100%; /* Теперь они будут на всю ширину карточки */
-    background: #000;
-    border: 1px solid #222;
-    padding: 12px;
-    color: #fff;
-    margin-bottom: 15px; /* Отступ между полями */
-    font-family: 'Inter', sans-serif;
-    box-sizing: border-box; /* Чтобы padding не раздувал ширину */
-}
+.modal-card input,
 
 .auth-submit {
-    width: 100%;
-    background: #fff;
-    color: #000;
-    border: none;
-    padding: 12px;
-    font-weight: 900;
-    cursor: pointer;
-    text-transform: uppercase;
-    transition: 0.2s;
+    width: 100% !important; /* Форсируем ширину */
+    margin-bottom: 15px;
+    display: block; /* Гарантируем, что это блочный элемент */
 }
 
 .auth-submit:hover { 

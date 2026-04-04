@@ -9,27 +9,38 @@
 <body>
 
     <header class="main-header">
-        <div class="logo">Killa</div>
-        <div id="auth-btn" class="btn-login" onclick="openAuthModal()">Cabinet</div>
-    </header>
+    <div class="logo">Killa</div>
+    <div id="auth-btn" class="btn-login">Cabinet</div>
+</header>
 
-    <main class="main-content">
-        <div class="tabs-nav">
-            <button class="tab-btn active" onclick="showTab(event, 'news')">News</button>
-            <button class="tab-btn" onclick="showTab(event, 'info')">Info</button>
-            <button class="tab-btn" id="cabinet-tab" onclick="showTab(event, 'cabinet')" style="display: none;">Private</button>
+<div id="cabinet" class="content-section">
+    <div class="card profile-card">
+        <div class="profile-header">
+            <h2 id="user-display-name">---</h2>
+            <span id="user-role-badge" class="role-badge">MEMBER</span>
         </div>
-
-        <div id="news" class="content-section active">
-            <div id="news-container"></div>
-        </div>
-
-        <div id="info" class="content-section">
-            <div class="card">
-                <h3>PROJECT INFO</h3>
-                <p>Система управления ролями и контентом. Доступ только для авторизованных пользователей.</p>
+        
+        <div class="stats-grid">
+            <div class="stat-item">
+                <span class="stat-label">Access Status</span>
+                <span class="stat-value" style="color: #00ff00;">Active</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Security Level</span>
+                <span id="security-level" class="stat-value">Level 1</span>
             </div>
         </div>
+
+        <div class="post-form">
+            <h4>CREATE BROADCAST</h4>
+            <input type="text" id="news-title" placeholder="TITLE">
+            <textarea id="news-text" placeholder="ENCRYPTED MESSAGE..."></textarea>
+            <button class="auth-submit" onclick="publishNews()">SEND TO FEED</button>
+        </div>
+
+        <button class="logout-btn" onclick="handleLogout()">TERMINATE SESSION</button>
+    </div>
+</div>
 
         <div id="cabinet" class="content-section">
             <div class="card">
@@ -146,32 +157,56 @@
         }
     });
 
-    onAuthStateChanged(auth, async (user) => {
-        const cab = document.getElementById('cabinet-tab');
-        const authBtn = document.getElementById('auth-btn');
-        if (user) {
-            const userRef = ref(db, 'users/' + user.uid);
-            const snap = await get(userRef);
-            let userData = snap.val();
+    // Добавь эту функцию в window
+window.handleLogout = () => {
+    if(confirm("Завершить сессию?")) {
+        signOut(auth).then(() => {
+            window.location.reload(); // Перезагрузка для чистоты состояния
+        });
+    }
+};
 
-            if (!userData) {
-                userData = { role: 'Member', name: user.displayName || user.email.split('@')[0] };
-                await set(userRef, userData);
-            }
+onAuthStateChanged(auth, async (user) => {
+    const cabTab = document.getElementById('cabinet-tab');
+    const authBtn = document.getElementById('auth-btn');
+    
+    if (user) {
+        const userRef = ref(db, 'users/' + user.uid);
+        const snap = await get(userRef);
+        let userData = snap.val();
 
-            document.getElementById('user-display-name').innerText = userData.name;
-            const badge = document.getElementById('user-role-badge');
-            badge.innerText = userData.role;
-            badge.style.color = roleStyles[userData.role]?.color || '#888';
-            
-            authBtn.innerText = userData.name.toUpperCase();
-            cab.style.display = 'block';
-        } else {
-            if(cab) cab.style.display = 'none';
-            if(authBtn) authBtn.innerText = 'CABINET';
+        if (!userData) {
+            userData = { role: 'Member', name: user.displayName || "User" };
+            await set(userRef, userData);
         }
-    });
 
+        // Обновляем данные в кабинете
+        document.getElementById('user-display-name').innerText = userData.name.toUpperCase();
+        const badge = document.getElementById('user-role-badge');
+        badge.innerText = userData.role;
+        badge.style.color = roleStyles[userData.role]?.color || '#888';
+        
+        // Меняем Security Level в зависимости от роли
+        const secLevel = document.getElementById('security-level');
+        if(userData.role === 'Owner') secLevel.innerText = "Level 5 (ROOT)";
+        else if(userData.role === 'Developer') secLevel.innerText = "Level 4 (DEV)";
+        else secLevel.innerText = "Level 1 (GUEST)";
+
+        // ГЛАВНОЕ: Кнопка в шапке теперь просто открывает вкладку кабинета
+        authBtn.innerText = userData.name.toUpperCase();
+        authBtn.onclick = () => window.showTab(null, 'cabinet'); 
+        
+        if (cabTab) cabTab.style.display = 'block';
+    } else {
+        // Если не залогинен — кнопка открывает окно входа
+        if (authBtn) {
+            authBtn.innerText = 'CABINET';
+            authBtn.onclick = () => window.openAuthModal();
+        }
+        if (cabTab) cabTab.style.display = 'none';
+        window.showTab(null, 'news');
+    }
+});
     window.handleAuth = async () => {
         const email = document.getElementById('auth-email').value;
         const pass = document.getElementById('auth-password').value;

@@ -161,3 +161,57 @@ body {
     margin-top: 20px;
     cursor: pointer;
 }
+
+/* Автор новости */
+.author-info {
+    font-size: 10px;
+    margin-bottom: 10px;
+    display: flex;
+    gap: 10px;
+    text-transform: uppercase;
+    font-weight: 900;
+}
+
+.author-name { color: #fff; }
+.role-tag { letter-spacing: 1px; }
+
+/* Карточка новости */
+.news-card {
+    margin-bottom: 20px;
+    border-left: 2px solid #111;
+    transition: 0.3s;
+}
+
+.news-card:hover { border-left-color: #fff; }
+
+/* Форма в кабинете */
+.post-form {
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.post-form h4 {
+    font-size: 12px;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+}
+
+.post-form input, .post-form textarea {
+    background: #000;
+    border: 1px solid #111;
+    padding: 12px;
+    color: #fff;
+    font-family: inherit;
+    outline: none;
+}
+
+.post-form textarea { min-height: 100px; resize: none; }
+
+.role-badge {
+    padding: 2px 8px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 3px;
+    font-weight: 900;
+}

@@ -147,24 +147,46 @@
         };
 
         onAuthStateChanged(auth, async (user) => {
-            const cab = document.getElementById('cabinet-tab');
-            if (user) {
-                const userDoc = await getDoc(doc(db, "users", user.uid));
-                currentUserData = userDoc.data();
-                
-                document.getElementById('user-display-name').innerText = user.displayName;
-                const badge = document.getElementById('user-role-badge');
-                badge.innerText = currentUserData.role;
-                badge.style.color = roleStyles[currentUserData.role].color;
+    const cab = document.getElementById('cabinet-tab');
+    const authBtn = document.getElementById('auth-btn');
+    
+    if (user) {
+        try {
+            const userDocRef = doc(db, "users", user.uid);
+            let userSnap = await getDoc(userDocRef);
 
-                document.getElementById('auth-btn').innerText = user.displayName.toUpperCase();
-                cab.style.display = 'block';
-            } else {
-                cab.style.display = 'none';
-                document.getElementById('auth-btn').innerText = 'CABINET';
+            // Если записи в БД нет, создаем её (чтобы кабинет заработал)
+            if (!userSnap.exists()) {
+                await setDoc(userDocRef, { 
+                    role: 'Member', 
+                    name: user.displayName || user.email.split('@')[0] 
+                });
+                userSnap = await getDoc(userDocRef);
             }
-        });
 
+            currentUserData = userSnap.data();
+            
+            // Обновляем интерфейс
+            document.getElementById('user-display-name').innerText = user.displayName || "User";
+            const badge = document.getElementById('user-role-badge');
+            badge.innerText = currentUserData.role;
+            badge.style.color = roleStyles[currentUserData.role]?.color || '#888';
+
+            authBtn.innerText = (user.displayName || "CABINET").toUpperCase();
+            authBtn.onclick = () => { if(confirm("Log out?")) signOut(auth); };
+            cab.style.display = 'block';
+            
+        } catch (error) {
+            console.error("Ошибка загрузки профиля:", error);
+        }
+    } else {
+        // Если вышел из системы
+        cab.style.display = 'none';
+        authBtn.innerText = 'CABINET';
+        authBtn.onclick = openAuthModal;
+        showTab(null, 'news');
+    }
+});
         window.showTab = (e, id) => {
             document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none');
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));

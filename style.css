@@ -1,314 +1,126 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;900&display=swap');
 
-* { 
-    box-sizing: border-box; 
-    /* Плавность для всех изменений, включая высоту и отступы */
-    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1); 
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
     background-color: #000;
     color: #fff;
     font-family: 'Inter', sans-serif;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-height: 100vh;
+    overflow-x: hidden;
 }
 
+/* Header */
 header {
-    width: 100%;
-    max-width: 1200px;
-    padding: 20px;
+    padding: 20px 40px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: 1px solid #111;
 }
 
-.logo { font-weight: 900; letter-spacing: 5px; font-size: 18px; text-transform: uppercase; }
+.logo { font-weight: 900; letter-spacing: 5px; text-transform: uppercase; }
 
-/* Блок приветствия */
-.welcome-top {
-    text-align: center;
-    overflow: hidden; /* Важно: чтобы текст не вылезал при схлопывании */
-    max-height: 200px; 
-    opacity: 1;
-    margin-top: 40px;
-    margin-bottom: 20px;
-}
-
-.welcome-top h1 {
-    font-size: clamp(40px, 8vw, 70px);
-    font-weight: 900;
-    margin: 0;
-    letter-spacing: -3px;
+.btn-login {
+    font-size: 11px;
+    letter-spacing: 2px;
     text-transform: uppercase;
+    cursor: pointer;
+    border: 1px solid #222;
+    padding: 8px 15px;
+    transition: 0.3s;
 }
 
-/* КЛАСС СКРЫТИЯ: заставляет контент подняться */
-.hidden-welcome {
-    opacity: 0;
-    max-height: 0;   /* Схлопываем высоту */
-    margin-top: 0;   /* Убираем отступы */
-    margin-bottom: 0;
-    pointer-events: none;
-}
+.btn-login:hover { background: #fff; color: #000; }
 
-/* Основной контент (новости и табы) */
-.main-content {
-    width: 100%;
-    max-width: 600px;
-    margin: 0 auto;
+/* Welcome Screen */
+.welcome-top {
+    height: 100vh;
     display: flex;
-    flex-direction: column;
+    justify-content: center;
     align-items: center;
-    /* Создаем контекст наложения */
-    position: relative; 
+    position: fixed;
+    width: 100%;
+    background: #000;
+    z-index: 100;
+    transition: transform 1s cubic-bezier(0.8, 0, 0.2, 1);
 }
 
-.content-wrapper {
-    position: relative;
-    width: 100%;
-    margin-top: 30px; /* Расстояние от NEWS/INFO до карточки */
-    min-height: 250px; /* Резервируем место под самую большую карточку */
-}
+.welcome-top h1 { font-size: 8vw; text-transform: uppercase; font-weight: 900; }
+
+.hidden-welcome { transform: translateY(-100%); }
+
+/* Main Content */
+.main-content { padding: 60px 20px; max-width: 800px; margin: 0 auto; }
 
 .tabs-nav {
     display: flex;
-    gap: 25px; /* Чуть уменьшил отступ, так как текст стал больше */
-    margin-top: 30px;
-    width: 100%;
-    max-width: 600px;
+    gap: 20px;
+    margin-bottom: 40px;
     justify-content: center;
-    align-items: center; /* !!! ВЫРАВНИВАНИЕ ПО ОДНОМУ УРОВНЮ !!! */
-    /* Убрал нижнюю границу, чтобы активная кнопка не прыгала */
 }
+
 .tab-btn {
     background: none;
     border: none;
-    color: #333; /* Неактивный цвет */
-    padding: 10px 0; /* Уменьшил вертикальный паддинг */
-    
-    /* !!! УВЕЛИЧИВАЕМ РАЗМЕР ШРИФТА !!! */
-    font-size: 14px; /* Было 11px, стало 14px */
-    
-    font-weight: 900; /* Максимальная жирность */
+    color: #333;
+    font-weight: 900;
     text-transform: uppercase;
-    letter-spacing: 1px; /* Чуть меньше разнос букв для баланса */
     cursor: pointer;
-    position: relative;
-    transition: color 0.3s ease;
+    font-size: 14px;
+    transition: 0.3s;
 }
 
-.tab-btn:hover {
-    color: #666;
-}
+.tab-btn.active, .tab-btn:hover { color: #fff; }
 
-.tab-btn.active {
-    color: #fff; /* Белый для обычных */
-}
-
-#cabinet-tab {
-    display: none; /* Скрыта по умолчанию */
-    color: #660000; /* Неактивный красный */
-}
-
-/* Активная вкладка Private */
-#cabinet-tab.active {
-    color: #ff4444; /* Яркий красный */
-}
+.content-section { display: none; opacity: 0; transition: opacity 0.5s; }
+.content-section.active { display: block; opacity: 1; }
 
 .card {
     background: #050505;
     border: 1px solid #111;
-    padding: 30px;
-    border-radius: 4px;
-    min-height: 180px; /* Одинаковая высота карточек */
+    padding: 40px;
+    min-height: 200px;
 }
 
-.card h3 { 
-    font-size: 20px; 
-    margin: 0 0 15px 0; 
-    font-weight: 900; 
-    text-transform: uppercase;
-}
+.card h3 { font-size: 18px; margin-bottom: 20px; letter-spacing: 2px; }
+.card p { color: #555; line-height: 1.6; font-size: 14px; }
 
-.card p { 
-    color: #555; 
-    line-height: 1.6; 
-    font-size: 14px; 
-    margin: 0; 
-}
-
-.card h3 { font-size: 20px; margin: 0 0 10px 0; font-weight: 900; }
-.card p { color: #555; line-height: 1.6; font-size: 14px; margin: 0; }
-
-/* ... (весь предыдущий код остается) ... */
-
-/* Анимация появления контента при переключении вкладок */
-.content-section {
-    width: 100%;
-    /* Абсолютное позиционирование заставляет все секции 
-       накладываться друг на друга в одной точке */
-    position: absolute;
-    top: 0;
-    left: 0;
-    
-    display: none;
-    opacity: 0;
-    transform: translateY(10px);
-    transition: opacity 0.4s ease, transform 0.4s ease;
-}
-/* Класс для активной секции с анимацией */
-.content-section.active {
-    display: block;
-    opacity: 1;
-    transform: translateY(0);
-}
-
-/* Стили для скрытой кнопки Private */
-#cabinet-tab {
-    display: none; /* Скрыта до авторизации */
-    color: #ff4444; /* Можно выделить цветом для интереса */
-}
-
-/* Теги ролей в кабинете */
-.role-badge {
-    background: #fff;
-    color: #000;
-    padding: 2px 8px;
-    font-size: 10px;
-    font-weight: 900;
-    text-transform: uppercase;
-    border-radius: 2px;
-    margin-left: 10px;
-}
-
-/* Эффект курсора */
-.typewriter::after {
-    content: '|';
-    animation: blink 0.7s infinite;
-    margin-left: 2px;
-    color: #fff;
-}
-
-@keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
-}
-
-/* Убираем стандартную анимацию появления для текста, 
-   так как теперь у нас будет анимация печати */
-.content-section .card p {
-    opacity: 1;
-    transform: none;
-}
-
-.user-block {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.user-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: 1px solid #333;
-    object-fit: cover;
-}
-
-.user-name {
-    font-size: 12px;
-    font-weight: 900;
-    text-transform: uppercase;
-    color: #fff;
-}
-
-/* Модальное окно авторизации */
-.auth-modal {
-    display: none;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: #050505;
-    border: 1px solid #111;
-    padding: 30px;
-    z-index: 1000;
-    text-align: center;
-    width: 300px;
-}
-
-.auth-btn-provider {
-    width: 100%;
-    padding: 12px;
-    margin: 10px 0;
-    background: #111;
-    border: 1px solid #222;
-    color: #fff;
-    cursor: pointer;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-}
-
-.auth-btn-provider:hover { background: #181818; }
-
-
-/* Фоновая подложка */
+/* Modal Styles */
 .modal-overlay {
     display: none;
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.95); /* Чуть темнее для стиля */
-    z-index: 9999;
+    background: rgba(0,0,0,0.95);
+    z-index: 2000;
     align-items: center;
     justify-content: center;
 }
 
-/* Сама карточка */
 .modal-card {
     background: #050505;
     border: 1px solid #111;
     padding: 40px;
     width: 90%;
     max-width: 350px;
-    display: flex;         /* Включаем flex */
-    flex-direction: column; /* Элементы строго друг под другом */
-    align-items: center;
-    text-align: center;
+    display: flex;
+    flex-direction: column;
     box-sizing: border-box;
 }
 
-.modal-card h2 {
-    font-size: 18px;
-    letter-spacing: 3px;
-    margin-bottom: 25px;
-    color: #fff;
-    font-weight: 900;
-}
+.modal-card h2 { font-size: 16px; margin-bottom: 25px; text-align: center; letter-spacing: 3px; }
 
-/* Стили полей ввода */
 .modal-card input {
     width: 100%;
     background: #000;
     border: 1px solid #222;
     padding: 14px;
     color: #fff;
-    margin-bottom: 12px; /* Расстояние между полями */
+    margin-bottom: 15px;
     font-family: inherit;
-    box-sizing: border-box;
+    outline: none;
+    display: block;
 }
 
-.modal-card input:focus {
-    border-color: #444;
-}
-
-/* Кнопка */
 .auth-submit {
     width: 100%;
     background: #fff;
@@ -318,82 +130,22 @@ header {
     font-weight: 900;
     cursor: pointer;
     text-transform: uppercase;
-    transition: 0.2s;
     margin-top: 5px;
 }
 
-.auth-submit:hover {
-    background: #ccc;
-}
-
-/* Текст переключения */
 .auth-switch {
-    font-size: 11px;
-    color: #555;
+    font-size: 10px;
+    color: #444;
+    text-align: center;
     margin-top: 20px;
     cursor: pointer;
-    text-decoration: underline;
 }
 
-.auth-switch:hover {
-    color: #888;
-}
-
-
-/* --- МОБИЛЬНАЯ ВЕРСИЯ --- */
+/* Adaptive */
 @media (max-width: 768px) {
-    
-    header {
-        padding: 15px;
-    }
-
-    .logo {
-        font-size: 16px;
-        letter-spacing: 3px;
-    }
-
-    /* Уменьшаем Welcome для телефона */
-    .welcome-top h1 {
-        font-size: 38px; /* Оптимально для узких экранов */
-        letter-spacing: -1px;
-    }
-
-    .welcome-top {
-        margin-top: 20px;
-        max-height: 100px; /* Уменьшаем высоту для схлопывания */
-    }
-
-    /* Адаптируем табы */
-    .tabs-nav {
-        gap: 15px; /* Меньше расстояние между кнопками */
-        padding: 0 10px;
-    }
-
-    .tab-btn {
-        font-size: 12px; /* Чуть меньше шрифт */
-    }
-
-    /* Контент на весь экран */
-    .main-content {
-        padding: 0 15px;
-    }
-
-    .content-wrapper {
-        margin-top: 20px;
-        min-height: 300px; /* На мобилках текст длиннее, резервируем больше места */
-    }
-
-    .card {
-        padding: 20px;
-        min-height: 150px;
-    }
-
-    .card h3 {
-        font-size: 16px;
-    }
-
-    .card p {
-        font-size: 13px;
-        line-height: 1.5;
-    }
+    header { padding: 15px 20px; }
+    .tabs-nav { gap: 10px; flex-wrap: wrap; }
+    .tab-btn { font-size: 11px; }
+    .card { padding: 25px; }
+    .welcome-top h1 { font-size: 14vw; }
 }

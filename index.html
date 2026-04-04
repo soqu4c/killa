@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KILLA NETWORK</title>
+    <title>KILLA | PROJECT</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="data:,">
 </head>
@@ -17,7 +17,7 @@
         <button class="tab-btn" onclick="window.showTab(event, 'info-section')">INFO</button>
     </nav>
     <div class="user-area">
-        <button id="auth-btn" class="btn-login main-access-btn" onclick="openAuthModal()">ACCESS</button>
+        <button id="auth-btn" class="btn-login main-access-btn" onclick="window.openAuthModal()">ACCESS</button>
     </div>
 </header>
 
@@ -26,57 +26,78 @@
         <div id="news-container" class="feed-container"></div>
     </section>
 
+    <section id="info-section" class="content-section">
+        <div class="card">
+            <h3>SYSTEM INFORMATION</h3>
+            <p style="color: #444; font-size: 12px;">Infrastructure status: <span style="color: #00ff00;">ONLINE</span></p>
+            <p>Welcome to the encrypted KILLA node. All communications are protected by end-to-end encryption.</p>
+        </div>
+    </section>
+
     <section id="chat-section" class="content-section">
         <div id="chat-messages" class="chat-box"></div>
     </section>
 
-    <section id="info-section" class="content-section">
-        <div class="card info-card">
-            <h3>SYSTEM STATUS: <span style="color: #00ff00;">ENCRYPTED</span></h3>
-            <p>Добро пожаловать в защищенный узел KILLA. Все сообщения шифруются.</p>
-            <p>Протокол: <b>v2.1.0-STABLE</b></p>
-        </div>
-    </section>
-
     <section id="cabinet-section" class="content-section">
         <div class="card profile-card">
-            <div class="profile-header">
-                <img id="user-avatar-display" src="" class="avatar-current">
-                <div class="profile-info">
+            <div class="profile-main-info">
+                <img id="user-avatar-display" src="" class="avatar-current" alt="Avatar">
+                <div class="profile-text-info">
                     <h2 id="user-display-name">---</h2>
                     <span id="user-role-badge" class="role-badge">---</span>
                 </div>
             </div>
-            <div class="stats-grid">
-                <div class="stat-item">UID: #<span id="user-id-number">---</span></div>
-                <div class="stat-item">SECURE: <span id="security-level">---</span></div>
-            </div>
             
-            <div class="avatar-config">
-                <h4>AVATAR CONFIG</h4>
-                <div class="avatar-grid">
-                    <img src="https://api.dicebear.com/7.x/identicon/svg?seed=1" onclick="window.setAvatar(this.src)">
-                    <img src="https://api.dicebear.com/7.x/identicon/svg?seed=Killa" onclick="window.setAvatar(this.src)">
-                    <img src="https://api.dicebear.com/7.x/identicon/svg?seed=Shadow" onclick="window.setAvatar(this.src)">
-                    <img src="https://api.dicebear.com/7.x/identicon/svg?seed=Tech" onclick="window.setAvatar(this.src)">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-label">USER ID</span>
+                    <span id="user-id-number" class="stat-value" style="color: #3eafff;">---</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">SECURITY LEVEL</span>
+                    <span id="security-level" class="stat-value">---</span>
                 </div>
             </div>
+
+            <div class="post-form">
+                <h4>AVATAR CONFIG</h4>
+                <div class="avatar-grid">
+                    <img src="https://api.dicebear.com/7.x/identicon/svg?seed=1" class="av-opt" onclick="window.setAvatar(this.src)">
+                    <img src="https://api.dicebear.com/7.x/identicon/svg?seed=Killa" class="av-opt" onclick="window.setAvatar(this.src)">
+                    <img src="https://api.dicebear.com/7.x/identicon/svg?seed=Shadow" class="av-opt" onclick="window.setAvatar(this.src)">
+                    <img src="https://api.dicebear.com/7.x/identicon/svg?seed=Tech" class="av-opt" onclick="window.setAvatar(this.src)">
+                </div>
+            </div>
+            
             <button class="logout-btn" onclick="window.handleLogout()">TERMINATE SESSION</button>
         </div>
     </section>
 </main>
 
+<div id="auth-modal" class="modal-overlay" onclick="window.closeAuth()">
+    <div class="modal-card" onclick="event.stopPropagation()">
+        <h2 id="modal-title">SYSTEM ACCESS</h2>
+        <input type="text" id="auth-login" placeholder="NICKNAME" style="display: none;">
+        <input type="email" id="auth-email" placeholder="EMAIL">
+        <input type="password" id="auth-password" placeholder="PASSWORD">
+        <button class="auth-submit" onclick="window.handleAuth()">CONFIRM</button>
+        <p class="auth-switch" onclick="window.toggleAuthMode()">Нет аккаунта? Регистрация</p>
+    </div>
+</div>
+
 <div id="chat-input-zone" class="chat-input-area" style="display:none;">
     <div class="input-wrapper">
         <input type="text" id="chat-msg-input" placeholder="Type message..." onkeypress="if(event.key==='Enter') window.handleSend()">
-        <button class="send-btn" onclick="window.handleSend()">SEND</button>
+        <button class="send-btn" onclick="window.handleSend()">
+            <svg viewBox="0 0 24 24" width="20" fill="#3eafff"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+        </button>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getDatabase, ref, get, set, push, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getAuth, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getDatabase, ref, set, get, push, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
      const firebaseConfig = {
 
@@ -101,22 +122,31 @@
     const auth = getAuth(app);
     const db = getDatabase(app);
 
-    // Умное переключение вкладок
+    const roleStyles = {
+        'Developer': { color: '#3eafff', level: 6 },
+        'Owner': { color: '#ff3e3e', level: 5 },
+        'Крутой поц': { color: '#00ff00', level: 3 },
+        'Member': { color: '#888', level: 1 }
+    };
+
+    // --- ФУНКЦИИ ОКИН ---
+    window.openAuthModal = () => document.getElementById('auth-modal').style.display = 'block';
+    window.closeAuth = () => document.getElementById('auth-modal').style.display = 'none';
+
+    window.toggleAuthMode = () => {
+        const loginField = document.getElementById('auth-login');
+        const title = document.getElementById('modal-title');
+        const isReg = loginField.style.display === 'none';
+        loginField.style.display = isReg ? 'block' : 'none';
+        title.innerText = isReg ? 'REGISTRATION' : 'SYSTEM ACCESS';
+    };
+
     window.showTab = (event, tabId) => {
-        document.querySelectorAll('.content-section').forEach(s => {
-            s.style.display = 'none';
-            s.classList.remove('active');
-        });
+        document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none');
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        
-        const target = document.getElementById(tabId);
-        if(target) {
-            target.style.display = 'block';
-            target.classList.add('active');
-        }
+        document.getElementById(tabId).style.display = 'block';
         if(event) event.currentTarget.classList.add('active');
 
-        // Скрываем ввод везде, кроме News и Chat
         const inputZone = document.getElementById('chat-input-zone');
         if ((tabId === 'news-section' || tabId === 'chat-section') && auth.currentUser) {
             inputZone.style.display = 'block';
@@ -125,95 +155,101 @@
         }
     };
 
-    // Отправка без ошибок "Заполни поля"
+    window.handleAuth = async () => {
+        const email = document.getElementById('auth-email').value;
+        const pass = document.getElementById('auth-password').value;
+        const nick = document.getElementById('auth-login').value;
+        const isReg = document.getElementById('auth-login').style.display !== 'none';
+
+        try {
+            if (isReg) {
+                const res = await createUserWithEmailAndPassword(auth, email, pass);
+                const countSnap = await get(ref(db, 'system/users_count'));
+                const newId = (countSnap.val() || 0) + 1;
+                
+                const userData = {
+                    id: newId,
+                    name: nick,
+                    role: 'Member',
+                    avatar: 'https://api.dicebear.com/7.x/identicon/svg?seed=' + res.user.uid
+                };
+                await set(ref(db, 'users/' + res.user.uid), userData);
+                await set(ref(db, 'system/users_count'), newId);
+            } else {
+                await signInWithEmailAndPassword(auth, email, pass);
+            }
+            window.closeAuth();
+        } catch (e) { alert(e.message); }
+    };
+
     window.handleSend = async () => {
         const input = document.getElementById('chat-msg-input');
         const text = input.value.trim();
-        if(!text || !auth.currentUser) return;
+        if(!text) return;
 
         const snap = await get(ref(db, 'users/' + auth.currentUser.uid));
         const userData = snap.val();
-        
-        const activeTab = document.querySelector('.content-section.active').id;
-        const targetPath = activeTab === 'chat-section' ? 'chat_messages' : 'posts';
+        const isChat = document.getElementById('chat-section').style.display === 'block';
 
-        await push(ref(db, targetPath), {
-            text, 
-            author: userData.name, 
-            role: userData.role, 
-            timestamp: Date.now()
+        await push(ref(db, isChat ? 'chat_messages' : 'posts'), {
+            text, author: userData.name, role: userData.role, timestamp: Date.now()
         });
         input.value = '';
     };
 
+    window.setAvatar = (url) => set(ref(db, `users/${auth.currentUser.uid}/avatar`), url);
     window.handleLogout = () => signOut(auth).then(() => location.reload());
 
-    window.setAvatar = async (url) => {
-        if(!auth.currentUser) return;
-        await set(ref(db, `users/${auth.currentUser.uid}/avatar`), url);
-        document.getElementById('user-avatar-display').src = url;
-    };
-
-    // Главный слушатель входа
+    // --- СЛУШАТЕЛИ ---
     onAuthStateChanged(auth, async (user) => {
         const authBtn = document.getElementById('auth-btn');
-        const chatTabBtn = document.getElementById('chat-tab-btn');
-        
         if (user) {
-            const userRef = ref(db, 'users/' + user.uid);
-            const snap = await get(userRef);
-            let userData = snap.val();
+            const snap = await get(ref(db, 'users/' + user.uid));
+            const userData = snap.val();
+            if(!userData) return;
 
-            // Создание ID (1, 2, 3...)
-            if(!userData || !userData.id) {
-                const countSnap = await get(ref(db, 'system/users_count'));
-                const newId = (countSnap.val() || 0) + 1;
-                const baseData = userData || { name: user.email.split('@')[0], role: 'Member' };
-                baseData.id = newId;
-                await set(userRef, baseData);
-                await set(ref(db, 'system/users_count'), newId);
-                userData = baseData;
-            }
+            const rStyle = roleStyles[userData.role] || roleStyles['Member'];
 
-            // Роли и цвета
-            const roles = {
-                'Developer': { color: '#3eafff', lv: 6 },
-                'Owner': { color: '#ff3e3e', lv: 5 },
-                'Крутой поц': { color: '#ae70ff', lv: 3 }
-            };
-            const currentRole = roles[userData.role] || { color: '#888', lv: 1 };
-
-            // Обновление интерфейса
             document.getElementById('user-id-number').innerText = userData.id;
             document.getElementById('user-display-name').innerText = userData.name;
             document.getElementById('user-role-badge').innerText = userData.role;
-            document.getElementById('user-role-badge').style.color = currentRole.color;
-            document.getElementById('security-level').innerText = "Level " + currentRole.lv;
-            document.getElementById('user-avatar-display').src = userData.avatar || 'https://api.dicebear.com/7.x/identicon/svg?seed=' + user.uid;
-            
-            authBtn.innerText = userData.name.toUpperCase();
-            authBtn.classList.remove('main-access-btn');
-            authBtn.style.color = currentRole.color;
-            authBtn.style.borderColor = currentRole.color;
-            authBtn.onclick = () => window.showTab(null, 'cabinet-section');
+            document.getElementById('user-role-badge').style.color = rStyle.color;
+            document.getElementById('security-level').innerText = "Level " + rStyle.level;
+            document.getElementById('user-avatar-display').src = userData.avatar;
 
-            chatTabBtn.style.display = 'inline-block';
-            if (currentRole.lv >= 3) document.getElementById('chat-input-zone').style.display = 'block';
-        } else {
-            authBtn.classList.add('main-access-btn');
-            chatTabBtn.style.display = 'none';
+            authBtn.innerText = userData.name.toUpperCase();
+            authBtn.onclick = () => window.showTab(null, 'cabinet-section');
+            document.getElementById('chat-tab-btn').style.display = 'inline-block';
         }
     });
 
-    // Чат в реальном времени
     onValue(ref(db, 'chat_messages'), (snap) => {
         const box = document.getElementById('chat-messages');
         box.innerHTML = '';
         if(snap.exists()) {
             Object.values(snap.val()).forEach(m => {
-                box.innerHTML += `<div class="chat-msg"><b>${m.author}:</b> ${m.text}</div>`;
+                const color = roleStyles[m.role]?.color || '#888';
+                box.innerHTML += `<div class="chat-msg"><b style="color:${color}">${m.author}:</b> ${m.text}</div>`;
             });
             box.scrollTop = box.scrollHeight;
+        }
+    });
+
+    onValue(ref(db, 'posts'), (snap) => {
+        const container = document.getElementById('news-container');
+        container.innerHTML = '';
+        if(snap.exists()) {
+            Object.values(snap.val()).reverse().forEach(p => {
+                const color = roleStyles[p.role]?.color || '#888';
+                container.innerHTML += `
+                    <div class="card news-card">
+                        <div class="author-info">
+                            <span class="author-name">${p.author}</span>
+                            <span style="color:${color}">[${p.role}]</span>
+                        </div>
+                        <p>${p.text}</p>
+                    </div>`;
+            });
         }
     });
 </script>

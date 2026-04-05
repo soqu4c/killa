@@ -481,3 +481,44 @@ body {
         font-size: 9px;
     }
 }
+
+.welcome-overlay {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10000; /* Поверх всего */
+    pointer-events: none; /* Чтобы нельзя было случайно нажать */
+    text-align: center;
+    width: 100%;
+}
+
+.welcome-text {
+    font-family: monospace;
+    font-size: 40px; /* Сделаем побольше для эффекта */
+    color: #fff;
+    text-shadow: 0 0 20px #3eafff;
+    opacity: 0;
+    animation: welcomeFade 3s forwards; /* Анимация на 3 секунды */
+}
+
+@keyframes welcomeFade {
+    0% { opacity: 0; transform: translateY(20px); }
+    20% { opacity: 1; transform: translateY(0); }
+    80% { opacity: 1; }
+    100% { opacity: 0; transform: translateY(-20px); }
+}
+
+#global-welcome {
+    position: fixed; /* Фиксируем поверх всего */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    pointer-events: none; /* Чтобы можно было кликать "сквозь" надпись */
+}
+
+/* Сама анимация (добавь в стили) */
+#global-welcome h1 {
+    animation: welcomeFade 3.5s forwards;
+}

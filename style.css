@@ -10,7 +10,7 @@ body {
     line-height: 1.6;
 }
 
-/* --- BACKGROUND CANVAS --- */
+/* --- ФОНОВЫЙ КАНВАС --- */
 #stars-canvas {
     position: fixed;
     top: 0; left: 0;
@@ -18,7 +18,7 @@ body {
     z-index: -1;
 }
 
-/* --- HEADER --- */
+/* --- ШАПКА --- */
 .main-header {
     position: fixed;
     top: 0; width: 100%;
@@ -36,9 +36,38 @@ body {
     font-weight: 900; 
     letter-spacing: 5px; 
     text-transform: uppercase; 
-    color: #ffffff !important; /* Принудительно белый */
+    color: #ffffff !important;
 }
 
+.nav-links { display: flex; gap: 20px; }
+
+.tab-btn {
+    background: none; border: none;
+    color: #444; font-weight: 900;
+    text-transform: uppercase; cursor: pointer;
+    font-size: 13px; transition: 0.3s;
+    letter-spacing: 1px;
+}
+
+.tab-btn.active, .tab-btn:hover { color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
+
+/* --- КНОПКА ДОСТУПА --- */
+.main-access-btn {
+    background: #fff !important;
+    color: #000 !important;
+    font-weight: 900 !important;
+    border: none !important;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    padding: 8px 18px;
+    transition: 0.3s;
+}
+
+.main-access-btn:hover { background: #3eafff !important; color: #fff !important; }
+
+/* --- ЗАГРУЗЧИКИ И ПРИВЕТСТВИЯ --- */
 .initial-overlay {
     position: fixed;
     top: 0; left: 0;
@@ -47,7 +76,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 99999; /* Выше всего */
+    z-index: 99999;
     transition: opacity 0.8s ease, visibility 0.8s;
 }
 
@@ -64,128 +93,6 @@ body {
     100% { opacity: 1; letter-spacing: 15px; filter: blur(0); }
 }
 
-.nav-links { display: flex; gap: 20px; }
-
-.tab-btn {
-    background: none; border: none;
-    color: #444; font-weight: 900;
-    text-transform: uppercase; cursor: pointer;
-    font-size: 13px; transition: 0.3s;
-    letter-spacing: 1px;
-}
-
-.tab-btn.active, .tab-btn:hover { color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
-
-/* --- AUTH BUTTON --- */
-.btn-login {
-    font-size: 11px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    cursor: pointer;
-    border: 1px solid #222;
-    padding: 8px 18px;
-    transition: 0.3s;
-    background: none;
-    color: #fff;
-}
-
-.main-access-btn {
-    background: #fff !important;
-    color: #000 !important;
-    font-weight: 900 !important;
-    border: none !important;
-}
-
-.main-access-btn:hover { background: #3eafff !important; color: #fff !important; }
-
-/* --- CONTENT SECTIONS --- */
-.content-section {
-    display: none;
-    width: 100%;
-    max-width: 800px;
-    margin: 120px auto 150px;
-    padding: 0 20px;
-}
-
-.card {
-    background: rgba(10, 10, 10, 0.8);
-    border: 1px solid #111;
-    padding: 30px;
-    border-radius: 8px;
-    backdrop-filter: blur(5px);
-}
-
-/* --- PROFILE / CABINET --- */
-.profile-main-info {
-    display: flex;
-    align-items: center;
-    gap: 25px;
-    margin-bottom: 30px;
-    padding-bottom: 25px;
-    border-bottom: 1px solid #111;
-}
-
-.avatar-current {
-    width: 80px; height: 80px;
-    border-radius: 50%;
-    border: 2px solid #3eafff;
-    object-fit: cover;
-    background: #000;
-}
-
-.profile-text-info h2 { font-size: 22px; font-weight: 900; margin-bottom: 5px; }
-.role-badge { font-family: monospace; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; }
-
-.stats-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-    margin-bottom: 30px;
-}
-
-.stat-item {
-    background: #080808;
-    padding: 20px;
-    border: 1px solid #111;
-    text-align: center;
-}
-
-.stat-label { display: block; font-size: 10px; color: #444; text-transform: uppercase; margin-bottom: 8px; }
-.stat-value { font-family: monospace; font-weight: 900; font-size: 18px; color: #fff; }
-
-/* --- AVATAR CONFIG --- */
-.avatar-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    margin-top: 15px;
-    align-items: center;
-}
-
-.av-opt {
-    width: 50px; height: 50px;
-    border-radius: 50%;
-    border: 2px solid #222;
-    cursor: pointer;
-    transition: 0.3s;
-}
-
-.av-opt:hover { border-color: #3eafff; transform: scale(1.1); }
-
-.upload-label {
-    font-size: 11px;
-    color: #3eafff;
-    cursor: pointer;
-    text-transform: uppercase;
-    font-weight: 900;
-    border: 1px dashed #3eafff;
-    padding: 10px 15px;
-    transition: 0.3s;
-}
-
-.upload-label:hover { background: rgba(62, 175, 255, 0.1); }
-
-/* --- GLOBAL WELCOME ANIMATION --- */
 .welcome-overlay {
     position: fixed;
     top: 50%; left: 50%;
@@ -213,121 +120,117 @@ body {
     100% { opacity: 0; transform: translateY(-30px) scale(1.1); }
 }
 
-/* --- CHAT INPUT ZONE --- */
-.input-broadcast-zone {
-    position: fixed;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* Плавность */
-    z-index: 5000;
-}
-#info-section .card h3 {
-    color: #eee;
-}
-#info-section .card p {
-    color: #eee; /* Сделаем текст более читаемым, а не серым */
+/* --- СЕКЦИИ КОНТЕНТА --- */
+.content-section {
+    display: none;
+    width: 100%;
+    max-width: 800px;
+    margin: 120px auto 150px;
+    padding: 0 20px;
 }
 
-
-.input-hint {
-    font-size: 9px;
-    color: #444;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-top: 6px;
-    margin-left: 4px;
-}
-
-.input-broadcast-zone.minimized .toggle-input-btn {
-    top: -30px; /* Приподнимаем кнопку над краем экрана */
-    background: #3eafff;
-    color: #000;
-}
-
-/* Состояние скрытия */
-.input-broadcast-zone.minimized {
-    bottom: -80px !important; /* Уводим за нижний край экрана */
-    opacity: 0.3; /* Делаем полупрозрачной */
-}
-
-.toggle-input-btn {
-    position: absolute;
-    top: -12px;
-    right: 20px;
-    background: #111;
-    border: 1px solid #333;
-    color: #3eafff;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    cursor: pointer;
-    z-index: 10;
-}
-
-.input-glass-container {
+.card {
     background: rgba(10, 10, 10, 0.8);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 24px;
-    padding: 12px 16px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    border: 1px solid #111;
+    padding: 30px;
+    border-radius: 8px;
+    backdrop-filter: blur(5px);
+    margin-bottom: 20px;
 }
 
-.input-wrapper {
-    display: flex;
-    align-items: flex-end;
-    gap: 12px;
-}
+.status-online { color: #00ff00; font-size: 12px; margin-bottom: 10px; }
 
-#chat-msg-input {
-    flex: 1;
-    background: transparent;
-    border: none;
-    color: #fff;
-    font-family: inherit;
-    font-size: 15px;
-    padding: 8px 4px;
-    resize: none;
-    max-height: 200px;
-    outline: none;
-    line-height: 1.5;
-}
-
-/* Кнопка отправки */
-.send-trigger {
-    background: #3eafff; /* Твой синий цвет */
-    color: #000;
-    border: none;
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
+/* --- ЛИЧНЫЙ КАБИНЕТ (PROFILE) --- */
+.profile-main-info {
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 25px;
+    margin-bottom: 30px;
+    padding-bottom: 25px;
+    border-bottom: 1px solid #111;
+}
+
+.avatar-current {
+    width: 80px; height: 80px;
+    border-radius: 5px; /* Квадратные со скруглением под стиль KILLA */
+    border: 2px solid #3eafff;
+    object-fit: cover;
+    background: #111;
+}
+
+.profile-text-info h2 { font-size: 22px; font-weight: 900; margin-bottom: 5px; }
+.role-badge { font-family: monospace; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; }
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.stat-item {
+    background: #080808;
+    padding: 20px;
+    border: 1px solid #111;
+    text-align: center;
+}
+
+.stat-label { display: block; font-size: 10px; color: #444; text-transform: uppercase; margin-bottom: 8px; }
+.stat-value { font-family: monospace; font-weight: 900; font-size: 18px; color: #fff; }
+
+/* Настройка аватара */
+.avatar-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 15px;
+    align-items: center;
+}
+
+.av-opt {
+    width: 45px; height: 45px;
+    border-radius: 5px;
+    border: 1px solid #333;
     cursor: pointer;
-    transition: 0.2s ease;
-    flex-shrink: 0;
-    margin-bottom: 2px;
+    transition: 0.3s;
 }
 
-.send-trigger:hover {
-    background: #fff;
-    transform: scale(1.05);
+.av-opt:hover { border-color: #3eafff; transform: scale(1.1); }
+
+.upload-label {
+    display: inline-block;
+    font-size: 11px;
+    color: #3eafff;
+    cursor: pointer;
+    text-transform: uppercase;
+    font-weight: 900;
+    border: 1px dashed #3eafff;
+    padding: 10px 15px;
+    transition: 0.3s;
+    text-decoration: none;
 }
 
-.send-trigger svg {
-    width: 18px;
-    height: 18px;
-}
+.upload-label:hover { background: rgba(62, 175, 255, 0.1); }
+#avatar-upload { display: none; }
 
-/* --- MODALS --- */
+/* --- МОДАЛЬНОЕ ОКНО --- */
 .modal-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0,0,0,0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
     z-index: 10000;
+}
+
+.modal-card {
+    background: #0a0a0a;
+    border: 1px solid #222;
+    padding: 40px;
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
 }
 
 .modal-card h2 {
@@ -335,12 +238,13 @@ body {
     font-size: 14px;
     letter-spacing: 4px;
     margin-bottom: 30px;
+    text-transform: uppercase;
 }
 
 .modal-card input {
     width: 100%;
-    background: #080808;
-    border: 1px solid #1a1a1a;
+    background: #0d0d0d;
+    border: 1px solid #222;
     padding: 15px;
     color: #fff;
     margin-bottom: 15px;
@@ -349,11 +253,9 @@ body {
     transition: 0.3s;
 }
 
-.modal-card input:focus {
-    border-color: #3eafff;
-}
+.modal-card input:focus { border-color: #3eafff; }
 
-#auth-submit-btn {
+.auth-submit {
     width: 100%;
     background: #fff;
     color: #000;
@@ -363,30 +265,80 @@ body {
     cursor: pointer;
     text-transform: uppercase;
     letter-spacing: 2px;
-    margin-bottom: 15px;
-}
-
-#auth-toggle-link {
-    display: block;
-    color: #444;
-    font-size: 10px;
-    text-transform: uppercase;
-    cursor: pointer;
-    text-decoration: none;
     transition: 0.3s;
 }
 
-#auth-toggle-link:hover {
+.auth-submit:hover { background: #3eafff; color: #fff; }
+
+.auth-switch {
+    display: block;
     color: #3eafff;
+    font-size: 11px;
+    text-transform: uppercase;
+    cursor: pointer;
+    margin-top: 15px;
+    transition: 0.3s;
 }
 
-.modal-card input {
-    width: 100%; background: #0a0a0a;
-    border: 1px solid #222; padding: 12px;
-    color: #fff; margin-bottom: 10px; outline: none;
+/* --- ЧАТ (ИНПУТ) --- */
+.input-broadcast-zone {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 5000;
+    width: 100%;
+    max-width: 600px;
 }
 
-/* --- SYSTEM FOOTER --- */
+.input-broadcast-zone.minimized {
+    bottom: -80px !important;
+    opacity: 0.3;
+}
+
+.input-glass-container {
+    background: rgba(10, 10, 10, 0.8);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 12px 16px;
+}
+
+.input-wrapper { display: flex; align-items: flex-end; gap: 12px; }
+
+#chat-msg-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 15px;
+    outline: none;
+    resize: none;
+    max-height: 200px;
+}
+
+.send-trigger {
+    background: #3eafff;
+    color: #000;
+    border: none;
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.toggle-input-btn {
+    position: absolute;
+    top: -12px; right: 20px;
+    background: #111; border: 1px solid #333;
+    color: #3eafff; width: 24px; height: 24px;
+    border-radius: 50%; cursor: pointer;
+}
+
+/* --- ФУТЕР И СТАТУС --- */
 .system-footer-status {
     position: fixed;
     bottom: 15px; left: 20px;
@@ -407,6 +359,7 @@ body {
     background: none; border: 1px solid #ff3e3e;
     color: #ff3e3e; cursor: pointer; font-weight: 900;
     margin-top: 10px; transition: 0.3s;
+    text-transform: uppercase;
 }
 
 .logout-btn:hover { background: #ff3e3e; color: #000; }

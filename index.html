@@ -23,9 +23,9 @@
 </header>
 
 <main>
-
-    <div id="global-welcome" style="display: none; padding: 20px 0 10px 0; text-align: center;">
-        <h1 style="font-family: monospace; font-size: 24px; color: #fff; text-shadow: 0 0 10px #3eafff;">
+    <main>
+    <div id="global-welcome" class="welcome-overlay" style="display: none;">
+        <h1 class="welcome-text">
             WELCOME, <span id="user-display-name-global">...</span>
         </h1>
     </div>
@@ -216,55 +216,58 @@
 
     // --- CORE LISTENERS (ИСПРАВЛЕНО И ОБЪЕДИНЕНО) ---
     onAuthStateChanged(auth, async (user) => {
-    const authBtn = document.getElementById('auth-btn');
-    const inputZone = document.getElementById('chat-input-zone');
-    const chatTab = document.getElementById('chat-tab-btn');
-    const globalWelcome = document.getElementById('global-welcome');
+        const authBtn = document.getElementById('auth-btn');
+        const inputZone = document.getElementById('chat-input-zone');
+        const chatTab = document.getElementById('chat-tab-btn');
+        const globalWelcome = document.getElementById('global-welcome');
 
-    if (user) {
-        try {
-            const snap = await get(ref(db, 'users/' + user.uid));
-            const data = snap.val();
-            
-            if (data) {
-                // 1. Обновляем текст на кнопке ACCESS
-                authBtn.innerText = data.name.toUpperCase();
+        if (user) {
+            try {
+                const snap = await get(ref(db, 'users/' + user.uid));
+                const data = snap.val();
                 
-                // 2. Ищем спан в приветствии и пишем туда имя
-                const nameSpan = document.getElementById('user-display-name-global');
-                if (nameSpan) {
-                    nameSpan.innerText = data.name.toUpperCase();
+                if (data) {
+                    // 1. Обновляем текст на кнопке
+                    authBtn.innerText = data.name.toUpperCase();
+                    
+                    // 2. Устанавливаем имя в приветствие
+                    const nameSpan = document.getElementById('user-display-name-global');
+                    if (nameSpan) {
+                        nameSpan.innerText = data.name.toUpperCase();
+                    }
+
+                    // 3. ЛОГИКА ПОЯВЛЕНИЯ И ИСЧЕЗНОВЕНИЯ
+                    if (globalWelcome) {
+                        globalWelcome.style.display = 'block'; // Показываем блок
+                        
+                        // Через 3.5 секунды скрываем его полностью
+                        setTimeout(() => {
+                            globalWelcome.style.display = 'none';
+                        }, 3500);
+                    }
+
+                    // 4. Обновляем остальные данные
+                    if(document.getElementById('user-display-name')) 
+                        document.getElementById('user-display-name').innerText = data.name;
+                    
+                    chatTab.style.display = 'inline-block';
+                    inputZone.style.display = 'block';
+                    
+                    authBtn.onclick = () => window.showTab(null, 'cabinet-section');
                 }
-
-                // 3. ПОКАЗЫВАЕМ сам блок приветствия
-                if (globalWelcome) {
-                    globalWelcome.style.display = 'block';
-                }
-
-                // 4. Обновляем данные в кабинете (если зайти туда)
-                if(document.getElementById('user-display-name')) 
-                    document.getElementById('user-display-name').innerText = data.name;
-                
-                // Включаем чат и строку ввода
-                chatTab.style.display = 'inline-block';
-                inputZone.style.display = 'block';
-                
-                authBtn.onclick = () => window.showTab(null, 'cabinet-section');
+            } catch (e) {
+                console.error("Ошибка загрузки профиля:", e);
             }
-        } catch (e) {
-            console.error("Ошибка загрузки профиля:", e);
+        } else {
+            authBtn.innerText = "ACCESS";
+            authBtn.onclick = () => window.openAuthModal();
+            if (globalWelcome) globalWelcome.style.display = 'none';
+            inputZone.style.display = 'none';
+            chatTab.style.display = 'none';
         }
-    } else {
-        // Если вышел — всё прячем
-        authBtn.innerText = "ACCESS";
-        authBtn.onclick = () => window.openAuthModal();
-        if (globalWelcome) globalWelcome.style.display = 'none';
-        inputZone.style.display = 'none';
-        chatTab.style.display = 'none';
-    }
-});
+    });
 
-    // --- DATA FETCHING ---
+    // --- ОСТАЛЬНАЯ ЧАСТЬ ТВОЕГО СКРИПТА (БЕЗ ИЗМЕНЕНИЙ) ---
     onValue(ref(db, 'posts'), (snap) => {
         const container = document.getElementById('news-container');
         if(!container) return;
@@ -299,14 +302,11 @@
         if(el) el.innerText = snap.val() || 0;
     });
 
-    // --- HANDLERS ---
     window.handleSend = async () => {
         const input = document.getElementById('chat-msg-input');
         if(!input.value.trim() || !auth.currentUser) return;
         const userSnap = await get(ref(db, 'users/' + auth.currentUser.uid));
         const userData = userSnap.val();
-        
-        // Проверяем какая секция сейчас открыта, чтобы знать куда писать
         const isChat = document.getElementById('chat-section').style.display === 'block';
         
         await push(ref(db, isChat ? 'chat_messages' : 'posts'), {

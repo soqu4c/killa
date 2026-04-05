@@ -216,21 +216,22 @@ body {
 /* --- МОДАЛЬНОЕ ОКНО --- */
 .modal-overlay {
     position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.9);
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.95); /* Плотный черный фон */
     display: flex;
     justify-content: center;
-    align-items: center; /* Центрирует карточку по вертикали */
-    z-index: 10000;
+    align-items: center;
+    z-index: 100000; /* Максимальный приоритет */
 }
 
 .modal-card {
     background: #0a0a0a;
-    border: 1px solid #222;
+    border: 1px solid #3eafff; /* Синяя рамка в стиле KILLA */
     padding: 40px;
-    width: 90%;          /* Чтобы не растягивалось на мобилках */
-    max-width: 400px;    /* Ограничиваем ширину */
-    text-align: center;
+    width: 100%;
+    max-width: 380px; /* Фиксированная ширина */
+    box-shadow: 0 0 30px rgba(62, 175, 255, 0.2);
     position: relative;
 }
 
@@ -243,15 +244,10 @@ body {
 }
 
 .modal-card input {
-    width: 100%;
-    background: #0d0d0d;
+    background: #111 !important;
+    color: #fff !important;
     border: 1px solid #222;
-    padding: 15px;
-    color: #fff;
     margin-bottom: 15px;
-    font-family: monospace;
-    outline: none;
-    transition: 0.3s;
 }
 
 .modal-card input:focus { border-color: #3eafff; }

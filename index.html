@@ -24,12 +24,12 @@
 
 <main>
 
-    
     <div id="global-welcome" style="display: none; padding: 20px 0 10px 0; text-align: center;">
         <h1 style="font-family: monospace; font-size: 24px; color: #fff; text-shadow: 0 0 10px #3eafff;">
             WELCOME, <span id="user-display-name-global">...</span>
         </h1>
     </div>
+    </main>
 
     <section id="news-section" class="content-section" style="display: block;">
         <div id="news-container" class="feed-container"></div>
@@ -216,49 +216,53 @@
 
     // --- CORE LISTENERS (ИСПРАВЛЕНО И ОБЪЕДИНЕНО) ---
     onAuthStateChanged(auth, async (user) => {
-        const authBtn = document.getElementById('auth-btn');
-        const inputZone = document.getElementById('chat-input-zone');
-        const chatTab = document.getElementById('chat-tab-btn');
-        const globalWelcome = document.getElementById('global-welcome'); // Блок из твоего запроса
+    const authBtn = document.getElementById('auth-btn');
+    const inputZone = document.getElementById('chat-input-zone');
+    const chatTab = document.getElementById('chat-tab-btn');
+    const globalWelcome = document.getElementById('global-welcome');
 
-        if(user) {
+    if (user) {
+        try {
             const snap = await get(ref(db, 'users/' + user.uid));
             const data = snap.val();
-            if(data) {
-                // Заполняем никнейм на кнопке и в заголовках
+            
+            if (data) {
+                // 1. Обновляем текст на кнопке ACCESS
                 authBtn.innerText = data.name.toUpperCase();
                 
-                // Проверяем существование элементов перед заполнением
-                const nameEl = document.getElementById('user-display-name');
-                const welcomeEl = document.getElementById('user-display-name-global'); // ID из HTML выше
-                const cabinetWelcomeEl = document.getElementById('user-display-name-welcome');
+                // 2. Ищем спан в приветствии и пишем туда имя
+                const nameSpan = document.getElementById('user-display-name-global');
+                if (nameSpan) {
+                    nameSpan.innerText = data.name.toUpperCase();
+                }
 
-                if(nameEl) nameEl.innerText = data.name;
-                if(welcomeEl) welcomeEl.innerText = data.name;
-                if(cabinetWelcomeEl) cabinetWelcomeEl.innerText = data.name;
+                // 3. ПОКАЗЫВАЕМ сам блок приветствия
+                if (globalWelcome) {
+                    globalWelcome.style.display = 'block';
+                }
 
-                // Показываем надпись Welcome, если она есть в HTML
-                if (globalWelcome) globalWelcome.style.display = 'block';
-
-                document.getElementById('user-role-badge').innerText = data.role;
-                document.getElementById('user-id-number').innerText = data.id;
-                document.getElementById('user-avatar-display').src = data.avatar;
+                // 4. Обновляем данные в кабинете (если зайти туда)
+                if(document.getElementById('user-display-name')) 
+                    document.getElementById('user-display-name').innerText = data.name;
                 
+                // Включаем чат и строку ввода
                 chatTab.style.display = 'inline-block';
                 inputZone.style.display = 'block';
                 
                 authBtn.onclick = () => window.showTab(null, 'cabinet-section');
             }
-        } else {
-            authBtn.innerText = "ACCESS";
-            authBtn.onclick = () => window.openAuthModal();
-            inputZone.style.display = 'none';
-            chatTab.style.display = 'none';
-            
-            // Скрываем Welcome при выходе
-            if (globalWelcome) globalWelcome.style.display = 'none';
+        } catch (e) {
+            console.error("Ошибка загрузки профиля:", e);
         }
-    });
+    } else {
+        // Если вышел — всё прячем
+        authBtn.innerText = "ACCESS";
+        authBtn.onclick = () => window.openAuthModal();
+        if (globalWelcome) globalWelcome.style.display = 'none';
+        inputZone.style.display = 'none';
+        chatTab.style.display = 'none';
+    }
+});
 
     // --- DATA FETCHING ---
     onValue(ref(db, 'posts'), (snap) => {

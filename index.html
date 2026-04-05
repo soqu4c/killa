@@ -54,6 +54,10 @@
                 </div>
             </div>
             
+            <div id="cabinet-section" class="content-section" style="display:none;">
+                <h1 id="welcome-title">WELCOME, <span id="user-display-name">...</span></h1>
+            </div>
+
             <div class="stats-grid">
                 <div class="stat-item">
                     <span class="stat-label">USER ID</span>
@@ -214,6 +218,15 @@ animateStars();
     // 1. Скрываем все секции контента
     document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none');
     
+        const allowedTabs = ['news-section', 'chat-section'];
+
+    if (allowedTabs.includes(tabId) && auth.currentUser) {
+        inputZone.style.display = 'block';
+    } else {
+        // Скрываем только если это INFO или Кабинет
+        inputZone.style.display = 'none'; 
+    }
+
     // 2. Показываем нужную секцию
     const target = document.getElementById(tabId);
     if(target) target.style.display = 'block';
@@ -235,6 +248,8 @@ animateStars();
         inputZone.style.display = 'none';
     }
 };
+    
+
 
     window.handleAuth = async () => {
     const email = document.getElementById('auth-email').value.trim();
@@ -311,6 +326,7 @@ animateStars();
 
     // --- СЛУШАТЕЛИ ---
     onAuthStateChanged(auth, async (user) => {
+    const inputZone = document.getElementById('chat-input-zone');
     const authBtn = document.getElementById('auth-btn');
     const chatTabBtn = document.getElementById('chat-tab-btn');
     
@@ -351,6 +367,21 @@ authBtn.onclick = (e) => {
         countElement.innerText = snap.val() || 0;
     }
 });
+
+onAuthStateChanged(auth, async (user) => {
+    const inputZone = document.getElementById('chat-input-zone');
+    
+    if (user) {
+        // Если юзер вошел, сразу показываем строку ввода, 
+        // даже если он еще не переключил вкладку
+        if (inputZone) inputZone.style.display = 'block';
+        
+        // ... твой остальной код логина ...
+    } else {
+        if (inputZone) inputZone.style.display = 'none';
+    }
+});
+
                 // Показываем чат
                 chatTabBtn.style.display = 'inline-block';
                 

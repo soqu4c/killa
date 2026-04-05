@@ -73,7 +73,6 @@ window.handleAuth = async () => {
 onAuthStateChanged(auth, async (user) => {
     const authBtn = document.getElementById('auth-btn');
     const chatTab = document.getElementById('chat-tab-btn');
-    const welcomeOverlay = document.getElementById('global-welcome');
     const modal = document.getElementById('auth-modal');
 
     if (user) {
@@ -259,4 +258,9 @@ window.uploadAvatar = (input) => {
         window.setAvatar(e.target.result); // Сохраняем как Base64 (для простых тестов)
     };
     reader.readAsDataURL(file);
+};
+
+window.autoResize = (textarea) => {
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
 };

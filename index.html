@@ -38,9 +38,13 @@
 </header>
 
 <main>
-    <div id="global-welcome" class="welcome-overlay" style="display: none;">
-        <h1 class="welcome-text">WELCOME</h1>
-    </div>
+    <div id="initial-loader" class="initial-overlay">
+    <h1 class="giant-welcome">WELCOME</h1>
+</div>
+
+<div id="global-welcome" class="welcome-overlay" style="display: none;">
+    <h1 class="welcome-text">HELLO, <span id="user-display-name-global"></span></h1>
+</div>
 
     <section id="news-section" class="content-section" style="display: block;">
         <div id="news-container" class="feed-container"></div>
@@ -235,96 +239,72 @@
         }
     };
 
-    // --- NAVIGATION, AUTH, CHAT (ОСТАЛЬНОЕ) ---
+    // 1. ЛОГИКА НАЧАЛЬНОЙ ЗАСТАВКИ (сразу при запуске)
+    window.addEventListener('load', () => {
+        const loader = document.getElementById('initial-loader');
+        setTimeout(() => {
+            loader.style.opacity = '0';
+            loader.style.visibility = 'hidden';
+        }, 1500); // Исчезнет через 1.5 секунды
+    });
+
+    // 2. УПРАВЛЕНИЕ ТАБАМИ (исправлено скрытие панели)
     window.showTab = (event, tabId) => {
         document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none');
         const target = document.getElementById(tabId);
         if(target) target.style.display = 'block';
+
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         if (event && event.currentTarget) event.currentTarget.classList.add('active');
+
+        // Панель отправки видна ТОЛЬКО в NEWS и CHAT и ТОЛЬКО если юзер вошел
+        const inputZone = document.getElementById('chat-input-zone');
+        const isActionTab = (tabId === 'news-section' || tabId === 'chat-section');
+        
+        if (isActionTab && auth.currentUser) {
+            inputZone.style.display = 'block';
+        } else {
+            inputZone.style.display = 'none';
+        }
     };
 
-    window.openAuthModal = () => document.getElementById('auth-modal').style.display = 'block';
-    window.closeAuth = () => document.getElementById('auth-modal').style.display = 'none';
-    window.toggleAuthMode = () => {
-        const loginField = document.getElementById('auth-login');
-        const isReg = loginField.style.display === 'none';
-        loginField.style.display = isReg ? 'block' : 'none';
-        document.getElementById('modal-title').innerText = isReg ? 'REGISTRATION' : 'SYSTEM ACCESS';
-    };
-
-    window.handleAuth = async () => {
-        const email = document.getElementById('auth-email').value;
-        const pass = document.getElementById('auth-password').value;
-        const nick = document.getElementById('auth-login').value;
-        const isReg = document.getElementById('auth-login').style.display !== 'none';
-        try {
-            if(isReg) {
-                const res = await createUserWithEmailAndPassword(auth, email, pass);
-                const countSnap = await get(ref(db, 'system/users_count'));
-                const newId = (countSnap.val() || 0) + 1;
-                await set(ref(db, 'users/' + res.user.uid), {
-                    id: newId, name: nick || "User", role: 'Member', 
-                    avatar: 'https://api.dicebear.com/7.x/identicon/svg?seed=' + res.user.uid
-                });
-                await set(ref(db, 'system/users_count'), newId);
-            } else {
-                await signInWithEmailAndPassword(auth, email, pass);
-            }
-            window.closeAuth();
-        } catch(e) { alert(e.message); }
-    };
-
-    // --- CORE LISTENERS (ИСПРАВЛЕНО И ОБЪЕДИНЕНО) ---
+    // 3. AUTH LISTENER (Оптимизация подвисаний)
     onAuthStateChanged(auth, async (user) => {
         const authBtn = document.getElementById('auth-btn');
-        const inputZone = document.getElementById('chat-input-zone');
         const chatTab = document.getElementById('chat-tab-btn');
-        const globalWelcome = document.getElementById('global-welcome');
+        const inputZone = document.getElementById('chat-input-zone');
 
         if (user) {
+            // Чтобы не лагало, сначала меняем UI, потом грузим тяжелые данные
+            authBtn.innerText = "LOADING..."; 
+            
             try {
                 const snap = await get(ref(db, 'users/' + user.uid));
                 const data = snap.val();
                 
                 if (data) {
-                    // 1. Обновляем текст на кнопке
                     authBtn.innerText = data.name.toUpperCase();
-                    
-                    // 2. Устанавливаем имя в приветствие
-                    const nameSpan = document.getElementById('user-display-name-global');
-                    if (nameSpan) {
-                        nameSpan.innerText = data.name.toUpperCase();
-                    }
-
-                    // 3. ЛОГИКА ПОЯВЛЕНИЯ И ИСЧЕЗНОВЕНИЯ
-                    if (globalWelcome) {
-                        globalWelcome.style.display = 'block'; // Показываем блок
-                        
-                        // Через 3.5 секунды скрываем его полностью
-                        setTimeout(() => {
-                            globalWelcome.style.display = 'none';
-                        }, 3500);
-                    }
-
-                    // 4. Обновляем остальные данные
-                    if(document.getElementById('user-display-name')) 
-                        document.getElementById('user-display-name').innerText = data.name;
-                    
                     chatTab.style.display = 'inline-block';
-                    inputZone.style.display = 'block';
                     
-                    authBtn.onclick = () => window.showTab(null, 'cabinet-section');
+                    // Обновляем данные в кабинете
+                    if(document.getElementById('user-id-number')) {
+                        document.getElementById('user-id-number').innerText = data.id || '---';
+                        document.getElementById('user-display-name').innerText = data.name;
+                        document.getElementById('user-role-badge').innerText = data.role;
+                        document.getElementById('user-avatar-display').src = data.avatar || '';
+                    }
+
+                    // Проверяем, нужно ли показать панель ввода (если мы уже на вкладке NEWS)
+                    const currentTab = document.querySelector('.content-section[style*="display: block"]');
+                    if (currentTab && (currentTab.id === 'news-section' || currentTab.id === 'chat-section')) {
+                        inputZone.style.display = 'block';
+                    }
                 }
-            } catch (e) {
-                console.error("Ошибка загрузки профиля:", e);
-            }
+            } catch (e) { console.error(e); }
         } else {
             authBtn.innerText = "ACCESS";
-            authBtn.onclick = () => window.openAuthModal();
-            if (globalWelcome) globalWelcome.style.display = 'none';
-            inputZone.style.display = 'none';
             chatTab.style.display = 'none';
+            inputZone.style.display = 'none';
         }
     });
 

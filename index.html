@@ -402,6 +402,22 @@ function toggleInputZone() {
         console.error("Элемент chat-input-zone не найден!");
     }
 }
+
+window.openAuthModal = () => {
+    const modal = document.getElementById('auth-modal'); // Проверь, что ID совпадает
+    if (modal) {
+        modal.style.display = 'block';
+    } else {
+        console.error("Модальное окно с ID 'auth-modal' не найдено");
+    }
+};
+
+// Функция закрытия (тоже должна быть глобальной)
+window.closeAuthModal = () => {
+    const modal = document.getElementById('auth-modal');
+    if (modal) modal.style.display = 'none';
+};
+
 </script>
 </body>
 </html>

@@ -395,9 +395,13 @@ document.getElementById('chat-msg-input').addEventListener('keydown', function(e
 });
 
 function toggleInputZone() {
-    document.getElementById('chat-input-zone').classList.toggle('minimized');
+    const zone = document.getElementById('chat-input-zone');
+    if (zone) {
+        zone.classList.toggle('minimized');
+    } else {
+        console.error("Элемент chat-input-zone не найден!");
+    }
 }
-
 </script>
 </body>
 </html>

@@ -5,6 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KILLA | PROJECT</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Стили для аватарок */
+        .avatar-current { width: 80px; height: 80px; border-radius: 5px; border: 2px solid #3eafff; object-fit: cover; }
+        .av-opt { width: 40px; height: 40px; cursor: pointer; border: 1px solid #333; transition: 0.3s; }
+        .av-opt:hover { border-color: #3eafff; transform: scale(1.1); }
+        .upload-label { display: block; margin-top: 10px; color: #3eafff; cursor: pointer; font-size: 12px; text-decoration: underline; }
+        #avatar-upload { display: none; }
+        
+        /* Исправление наложения Welcome */
+        .welcome-overlay {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            z-index: 9999; text-align: center; pointer-events: none; width: 100%;
+        }
+        .welcome-text { font-size: 60px; color: #fff; text-shadow: 0 0 20px #3eafff; font-family: monospace; }
+    </style>
 </head>
 <body>
 
@@ -23,13 +38,9 @@
 </header>
 
 <main>
-    <main>
     <div id="global-welcome" class="welcome-overlay" style="display: none;">
-        <h1 class="welcome-text">
-            WELCOME, <span id="user-display-name-global">...</span>
-        </h1>
+        <h1 class="welcome-text">WELCOME</h1>
     </div>
-    </main>
 
     <section id="news-section" class="content-section" style="display: block;">
         <div id="news-container" class="feed-container"></div>
@@ -74,7 +85,8 @@
                 <div class="avatar-grid">
                     <img src="https://api.dicebear.com/7.x/identicon/svg?seed=1" class="av-opt" onclick="window.setAvatar(this.src)">
                     <img src="https://api.dicebear.com/7.x/identicon/svg?seed=Killa" class="av-opt" onclick="window.setAvatar(this.src)">
-                    <img src="https://api.dicebear.com/7.x/identicon/svg?seed=Shadow" class="av-opt" onclick="window.setAvatar(this.src)">
+                    <label class="upload-label" for="avatar-upload">UPLOAD FROM PC</label>
+                    <input type="file" id="avatar-upload" accept="image/*" onchange="window.uploadAvatar(this)">
                 </div>
             </div>
             <button class="logout-btn" onclick="window.handleLogout()">TERMINATE SESSION</button>
@@ -110,34 +122,21 @@
     USERS: <span id="live-users-count" class="accent-white">0</span>
 </div>
 
-<div id="admin-console" style="display:none; position:fixed; top:0; width:100%; background:rgba(0,0,0,0.9); padding:20px; z-index:9999; color:#3eafff; font-family:monospace;">
-    <div>SYSTEM TERMINAL</div>
-    <input type="text" id="console-input" style="width:100%; background:none; border:none; border-left:2px solid #3eafff; color:#fff; padding-left:10px;" placeholder="Command...">
-</div>
-
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getDatabase, ref, set, get, push, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, set, get, update, push, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     const firebaseConfig = {
 
         apiKey: "AIzaSyASOKVgbFNStdieGXpbMuVVX3Y8P7NlY6Y",
-
         authDomain: "killa-c8794.firebaseapp.com",
-
         databaseURL: "https://killa-c8794-default-rtdb.firebaseio.com",
-
         projectId: "killa-c8794",
-
         storageBucket: "killa-c8794.firebasestorage.app",
-
         messagingSenderId: "209292210267",
-
         appId: "1:209292210267:web:b320358f45a21ad1284f7e",
-
         measurementId: "G-BFYYQELE6C"
-
     };
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
@@ -164,24 +163,87 @@
     }
     animate();
 
-    // --- NAVIGATION ---
+    // --- CORE LISTENERS (ИСПРАВЛЕНО: ID, ROLE, SECURITY) ---
+    onAuthStateChanged(auth, async (user) => {
+        const authBtn = document.getElementById('auth-btn');
+        const inputZone = document.getElementById('chat-input-zone');
+        const chatTab = document.getElementById('chat-tab-btn');
+        const globalWelcome = document.getElementById('global-welcome');
+
+        if (user) {
+            try {
+                const snap = await get(ref(db, 'users/' + user.uid));
+                const data = snap.val();
+                
+                if (data) {
+                    authBtn.innerText = data.name.toUpperCase();
+                    
+                    // Обновляем Кабинет
+                    document.getElementById('user-display-name-welcome').innerText = data.name.toUpperCase();
+                    document.getElementById('user-display-name').innerText = data.name;
+                    document.getElementById('user-avatar-display').src = data.avatar || '';
+                    
+                    // ID и Роль
+                    document.getElementById('user-id-number').innerText = data.id || '---';
+                    const roleBadge = document.getElementById('user-role-badge');
+                    roleBadge.innerText = data.role || 'Member';
+                    roleBadge.style.color = roleStyles[data.role]?.color || '#888';
+                    
+                    // Уровень безопасности (админки)
+                    document.getElementById('security-level').innerText = 'LVL ' + (roleStyles[data.role]?.level || 1);
+
+                    // Показ Welcome на 3.5 сек
+                    if (globalWelcome && !sessionStorage.getItem('welcomed')) {
+                        globalWelcome.style.display = 'block';
+                        setTimeout(() => { globalWelcome.style.display = 'none'; }, 3500);
+                        sessionStorage.setItem('welcomed', 'true');
+                    }
+
+                    chatTab.style.display = 'inline-block';
+                    inputZone.style.display = 'block';
+                    authBtn.onclick = () => window.showTab(null, 'cabinet-section');
+                }
+            } catch (e) { console.error(e); }
+        } else {
+            authBtn.innerText = "ACCESS";
+            authBtn.onclick = () => window.openAuthModal();
+            inputZone.style.display = 'none';
+            chatTab.style.display = 'none';
+            sessionStorage.removeItem('welcomed');
+        }
+    });
+
+    // --- AVATAR UPLOAD FROM PC ---
+    window.uploadAvatar = (input) => {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const base64Image = e.target.result;
+            if (auth.currentUser) {
+                await update(ref(db, 'users/' + auth.currentUser.uid), { avatar: base64Image });
+                document.getElementById('user-avatar-display').src = base64Image;
+            }
+        };
+        reader.readAsDataURL(file);
+    };
+
+    window.setAvatar = async (url) => {
+        if (auth.currentUser) {
+            await update(ref(db, 'users/' + auth.currentUser.uid), { avatar: url });
+            document.getElementById('user-avatar-display').src = url;
+        }
+    };
+
+    // --- NAVIGATION, AUTH, CHAT (ОСТАЛЬНОЕ) ---
     window.showTab = (event, tabId) => {
         document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none');
         const target = document.getElementById(tabId);
         if(target) target.style.display = 'block';
-
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         if (event && event.currentTarget) event.currentTarget.classList.add('active');
-
-        const inputZone = document.getElementById('chat-input-zone');
-        if ((tabId === 'news-section' || tabId === 'chat-section') && auth.currentUser) {
-            inputZone.style.display = 'block';
-        } else {
-            inputZone.style.display = 'none';
-        }
     };
 
-    // --- AUTH ---
     window.openAuthModal = () => document.getElementById('auth-modal').style.display = 'block';
     window.closeAuth = () => document.getElementById('auth-modal').style.display = 'none';
     window.toggleAuthMode = () => {
@@ -196,7 +258,6 @@
         const pass = document.getElementById('auth-password').value;
         const nick = document.getElementById('auth-login').value;
         const isReg = document.getElementById('auth-login').style.display !== 'none';
-
         try {
             if(isReg) {
                 const res = await createUserWithEmailAndPassword(auth, email, pass);

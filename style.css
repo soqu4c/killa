@@ -220,7 +220,7 @@ body {
     background: rgba(0,0,0,0.9);
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: center; /* Центрирует карточку по вертикали */
     z-index: 10000;
 }
 
@@ -228,9 +228,10 @@ body {
     background: #0a0a0a;
     border: 1px solid #222;
     padding: 40px;
-    width: 100%;
-    max-width: 400px;
+    width: 90%;          /* Чтобы не растягивалось на мобилках */
+    max-width: 400px;    /* Ограничиваем ширину */
     text-align: center;
+    position: relative;
 }
 
 .modal-card h2 {
@@ -286,15 +287,13 @@ body {
     bottom: 30px;
     left: 50%;
     transform: translateX(-50%);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Пружинистая анимация */
     z-index: 5000;
-    width: 100%;
+    width: 90%;
     max-width: 600px;
 }
-
 .input-broadcast-zone.minimized {
-    bottom: -80px !important;
-    opacity: 0.3;
+    bottom: -70px !important; /* Уводим основную часть за экран */
 }
 
 .input-glass-container {
@@ -332,10 +331,26 @@ body {
 
 .toggle-input-btn {
     position: absolute;
-    top: -12px; right: 20px;
-    background: #111; border: 1px solid #333;
-    color: #3eafff; width: 24px; height: 24px;
-    border-radius: 50%; cursor: pointer;
+    top: -30px; /* Кнопка всегда висит СНАРУЖИ контейнера */
+    right: 20px;
+    background: #111;
+    border: 1px solid #333;
+    color: #3eafff;
+    width: 40px;
+    height: 25px;
+    border-radius: 10px 10px 0 0; /* Делаем в виде вкладки */
+    cursor: pointer;
+    z-index: 5001;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: 0.3s;
+}
+
+.input-broadcast-zone.minimized .toggle-input-btn {
+    background: #3eafff;
+    color: #000;
+    top: -25px; /* Чуть корректируем положение, когда скрыто */
 }
 
 /* --- ФУТЕР И СТАТУС --- */

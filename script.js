@@ -246,5 +246,15 @@ if (canvas) {
 
 // Сворачивание инпута
 window.toggleInputZone = () => {
-    document.getElementById('chat-input-zone').classList.toggle('minimized');
+    const zone = document.getElementById('chat-input-zone');
+    const btn = zone.querySelector('.toggle-input-btn');
+    
+    zone.classList.toggle('minimized');
+    
+    // Меняем иконку, чтобы было понятно, что делать
+    if (zone.classList.contains('minimized')) {
+        btn.innerText = '+';
+    } else {
+        btn.innerText = '–';
+    }
 };

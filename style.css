@@ -330,14 +330,54 @@ body {
     z-index: 10000;
 }
 
-.modal-card {
-    background: #000;
-    border: 1px solid #3eafff;
-    padding: 40px;
-    width: 320px;
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
+.modal-card h2 {
+    color: #fff;
+    font-size: 14px;
+    letter-spacing: 4px;
+    margin-bottom: 30px;
+}
+
+.modal-card input {
+    width: 100%;
+    background: #080808;
+    border: 1px solid #1a1a1a;
+    padding: 15px;
+    color: #fff;
+    margin-bottom: 15px;
+    font-family: monospace;
+    outline: none;
+    transition: 0.3s;
+}
+
+.modal-card input:focus {
+    border-color: #3eafff;
+}
+
+#auth-submit-btn {
+    width: 100%;
+    background: #fff;
+    color: #000;
+    border: none;
+    padding: 15px;
+    font-weight: 900;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 15px;
+}
+
+#auth-toggle-link {
+    display: block;
+    color: #444;
+    font-size: 10px;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-decoration: none;
+    transition: 0.3s;
+}
+
+#auth-toggle-link:hover {
+    color: #3eafff;
 }
 
 .modal-card input {

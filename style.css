@@ -216,13 +216,11 @@ body {
 /* --- CHAT INPUT ZONE --- */
 .input-broadcast-zone {
     position: fixed;
-    bottom: 30px; /* Отступ от нижнего края */
+    bottom: 30px;
     left: 50%;
     transform: translateX(-50%);
-    width: 90%;
-    max-width: 800px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* Плавность */
     z-index: 5000;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 #info-section .card h3 {
     color: #eee;
@@ -241,10 +239,16 @@ body {
     margin-left: 4px;
 }
 
+.input-broadcast-zone.minimized .toggle-input-btn {
+    top: -30px; /* Приподнимаем кнопку над краем экрана */
+    background: #3eafff;
+    color: #000;
+}
+
 /* Состояние скрытия */
 .input-broadcast-zone.minimized {
-    bottom: -75px;
-    opacity: 0.5;
+    bottom: -80px !important; /* Уводим за нижний край экрана */
+    opacity: 0.3; /* Делаем полупрозрачной */
 }
 
 .toggle-input-btn {

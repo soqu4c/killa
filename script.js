@@ -99,12 +99,7 @@ onAuthStateChanged(auth, async (user) => {
             
             chatTab.style.display = 'inline-block';
             
-            if (!sessionStorage.getItem('logged_in')) {
-                document.getElementById('user-display-name-global').innerText = data.name.toUpperCase();
-                welcomeOverlay.style.display = 'flex';
-                setTimeout(() => { welcomeOverlay.style.display = 'none'; }, 3000);
-                sessionStorage.setItem('logged_in', 'true');
-            }
+            
         }
     } else {
         // Если не залогинен - показываем окно входа сразу

@@ -23,6 +23,14 @@
 </header>
 
 <main>
+
+    
+    <div id="global-welcome" style="display: none; padding: 20px 0 10px 0; text-align: center;">
+        <h1 style="font-family: monospace; font-size: 24px; color: #fff; text-shadow: 0 0 10px #3eafff;">
+            WELCOME, <span id="user-display-name-global">...</span>
+        </h1>
+    </div>
+
     <section id="news-section" class="content-section" style="display: block;">
         <div id="news-container" class="feed-container"></div>
     </section>
@@ -206,24 +214,39 @@
         } catch(e) { alert(e.message); }
     };
 
-    // --- CORE LISTENERS ---
+    // --- CORE LISTENERS (ИСПРАВЛЕНО И ОБЪЕДИНЕНО) ---
     onAuthStateChanged(auth, async (user) => {
         const authBtn = document.getElementById('auth-btn');
         const inputZone = document.getElementById('chat-input-zone');
         const chatTab = document.getElementById('chat-tab-btn');
+        const globalWelcome = document.getElementById('global-welcome'); // Блок из твоего запроса
 
         if(user) {
             const snap = await get(ref(db, 'users/' + user.uid));
             const data = snap.val();
             if(data) {
+                // Заполняем никнейм на кнопке и в заголовках
                 authBtn.innerText = data.name.toUpperCase();
-                document.getElementById('user-display-name').innerText = data.name;
-                document.getElementById('user-display-name-welcome').innerText = data.name;
+                
+                // Проверяем существование элементов перед заполнением
+                const nameEl = document.getElementById('user-display-name');
+                const welcomeEl = document.getElementById('user-display-name-global'); // ID из HTML выше
+                const cabinetWelcomeEl = document.getElementById('user-display-name-welcome');
+
+                if(nameEl) nameEl.innerText = data.name;
+                if(welcomeEl) welcomeEl.innerText = data.name;
+                if(cabinetWelcomeEl) cabinetWelcomeEl.innerText = data.name;
+
+                // Показываем надпись Welcome, если она есть в HTML
+                if (globalWelcome) globalWelcome.style.display = 'block';
+
                 document.getElementById('user-role-badge').innerText = data.role;
                 document.getElementById('user-id-number').innerText = data.id;
                 document.getElementById('user-avatar-display').src = data.avatar;
+                
                 chatTab.style.display = 'inline-block';
                 inputZone.style.display = 'block';
+                
                 authBtn.onclick = () => window.showTab(null, 'cabinet-section');
             }
         } else {
@@ -231,12 +254,16 @@
             authBtn.onclick = () => window.openAuthModal();
             inputZone.style.display = 'none';
             chatTab.style.display = 'none';
+            
+            // Скрываем Welcome при выходе
+            if (globalWelcome) globalWelcome.style.display = 'none';
         }
     });
 
     // --- DATA FETCHING ---
     onValue(ref(db, 'posts'), (snap) => {
         const container = document.getElementById('news-container');
+        if(!container) return;
         container.innerHTML = '';
         if(snap.exists()) {
             Object.values(snap.val()).reverse().forEach(p => {
@@ -252,6 +279,7 @@
 
     onValue(ref(db, 'chat_messages'), (snap) => {
         const box = document.getElementById('chat-messages');
+        if(!box) return;
         box.innerHTML = '';
         if(snap.exists()) {
             Object.values(snap.val()).forEach(m => {
@@ -263,15 +291,18 @@
     });
 
     onValue(ref(db, 'system/users_count'), snap => {
-        document.getElementById('live-users-count').innerText = snap.val() || 0;
+        const el = document.getElementById('live-users-count');
+        if(el) el.innerText = snap.val() || 0;
     });
 
     // --- HANDLERS ---
     window.handleSend = async () => {
         const input = document.getElementById('chat-msg-input');
-        if(!input.value.trim()) return;
+        if(!input.value.trim() || !auth.currentUser) return;
         const userSnap = await get(ref(db, 'users/' + auth.currentUser.uid));
         const userData = userSnap.val();
+        
+        // Проверяем какая секция сейчас открыта, чтобы знать куда писать
         const isChat = document.getElementById('chat-section').style.display === 'block';
         
         await push(ref(db, isChat ? 'chat_messages' : 'posts'), {
@@ -291,7 +322,7 @@
     window.addEventListener('keydown', (e) => {
         if(e.key === '`') {
             const c = document.getElementById('admin-console');
-            c.style.display = c.style.display === 'none' ? 'block' : 'none';
+            if(c) c.style.display = c.style.display === 'none' ? 'block' : 'none';
         }
     });
 </script>

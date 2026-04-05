@@ -31,7 +31,7 @@ window.toggleAuthMode = () => {
     const btn = document.getElementById('auth-submit-btn');
     const toggleText = document.getElementById('auth-toggle-text');
 
-    if (nick.style.display === 'none') {
+    if (nick.style.display === 'none' || nick.style.display === '') {
         title.innerText = "SYSTEM REGISTRATION";
         nick.style.display = 'block';
         btn.innerText = "CREATE ACCOUNT";
@@ -48,7 +48,7 @@ window.handleAuth = async () => {
     const email = document.getElementById('auth-email').value;
     const pass = document.getElementById('auth-password').value;
     const nick = document.getElementById('auth-nickname').value;
-    const isReg = document.getElementById('auth-nickname').style.display !== 'none';
+    const isReg = document.getElementById('auth-nickname').style.display === 'block';
 
     try {
         if (isReg) {
@@ -68,25 +68,26 @@ window.handleAuth = async () => {
     }
 };
 
-// --- НАБЛЮДАТЕЛЬ ЗА СОСТОЯНИЕМ (AUTH OBSERVER) ---
+// --- НАБЛЮДАТЕЛЬ (AUTH OBSERVER) ---
 onAuthStateChanged(auth, async (user) => {
     const authBtn = document.getElementById('auth-btn');
     const chatTab = document.getElementById('chat-tab-btn');
     const welcomeOverlay = document.getElementById('global-welcome');
-
-    if (authBtn) authBtn.innerText = "ACCESS";
+    const modal = document.getElementById('auth-modal');
 
     if (user) {
-        // Закрываем модалку, если она открыта
-        window.closeAuthModal();
+        modal.style.display = 'none'; // Скрываем вход, если залогинены
         
         const snap = await get(ref(db, 'users/' + user.uid));
         const data = snap.val();
-        const userStatusRef = ref(db, 'status/' + user.uid);
-        set(userStatusRef, { name: data.name, online: true });
-        onDisconnect(userStatusRef).remove();
         
         if (data) {
+            // Статус Онлайн
+            const userStatusRef = ref(db, 'status/' + user.uid);
+            set(userStatusRef, { name: data.name, online: true });
+            onDisconnect(userStatusRef).remove();
+
+            // Обновляем UI
             authBtn.innerText = data.name.toUpperCase();
             document.getElementById('user-display-name').innerText = data.name;
             document.getElementById('user-id-number').innerText = data.id;
@@ -97,7 +98,6 @@ onAuthStateChanged(auth, async (user) => {
             
             chatTab.style.display = 'inline-block';
             
-            // Персональное приветствие (раз в сессию)
             if (!sessionStorage.getItem('logged_in')) {
                 document.getElementById('user-display-name-global').innerText = data.name.toUpperCase();
                 welcomeOverlay.style.display = 'flex';
@@ -106,33 +106,29 @@ onAuthStateChanged(auth, async (user) => {
             }
         }
     } else {
+        // Если не залогинен - показываем окно входа сразу
+        modal.style.display = 'flex';
         authBtn.innerText = "ACCESS";
         chatTab.style.display = 'none';
         sessionStorage.removeItem('logged_in');
-        // Если разлогинились, уходим с секретных вкладок
-        const currentTab = document.querySelector('.tab-btn.active')?.innerText;
-        if (currentTab === 'CHAT' || currentTab === 'PROFILE') {
-            window.showTab(null, 'news-section');
-        }
     }
 });
 
+// Счетчик пользователей
 onValue(ref(db, 'status'), (snapshot) => {
     const count = snapshot.size || 0;
     const counterElement = document.getElementById('live-users-count');
     if (counterElement) counterElement.innerText = count;
 });
 
-// --- УПРАВЛЕНИЕ ВКЛАДКАМИ ---
+// --- ОСТАЛЬНЫЕ ФУНКЦИИ ---
 window.showTab = (event, tabId) => {
     document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none');
     document.getElementById(tabId).style.display = 'block';
-    
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     if (event) event.currentTarget.classList.add('active');
 
     const inputZone = document.getElementById('chat-input-zone');
-    // Показываем поле ввода только если юзер вошел и находится в чате или новостях
     if (auth.currentUser && (tabId === 'chat-section' || tabId === 'news-section')) {
         inputZone.style.display = 'block';
     } else {
@@ -140,7 +136,6 @@ window.showTab = (event, tabId) => {
     }
 };
 
-// --- МОДАЛЬНЫЕ ОКНА ---
 window.openAuthModal = () => {
     if (auth.currentUser) {
         window.showTab(null, 'cabinet-section');
@@ -150,17 +145,16 @@ window.openAuthModal = () => {
 };
 
 window.closeAuthModal = () => {
+    // Не даем закрыть модалку, если пользователь не вошел
+    if (!auth.currentUser) {
+        alert("Требуется авторизация в системе KILLA");
+        return;
+    }
     document.getElementById('auth-modal').style.display = 'none';
 };
 
 window.handleLogout = () => {
     signOut(auth).then(() => location.reload());
-};
-
-// --- ЧАТ И ОТПРАВКА ---
-window.autoResize = (t) => {
-    t.style.height = 'auto';
-    t.style.height = t.scrollHeight + 'px';
 };
 
 window.handleSend = async () => {
@@ -179,12 +173,11 @@ window.handleSend = async () => {
     });
 
     input.value = '';
-    input.style.height = 'auto';
 };
 
-// --- РЕАЛЬНОЕ ВРЕМЯ (СЛУШАТЕЛИ БД) ---
 onValue(ref(db, 'chat_messages'), snap => {
     const box = document.getElementById('chat-messages');
+    if (!box) return;
     box.innerHTML = '';
     snap.forEach(child => {
         const m = child.val();
@@ -196,6 +189,7 @@ onValue(ref(db, 'chat_messages'), snap => {
 
 onValue(ref(db, 'posts'), snap => {
     const cont = document.getElementById('news-container');
+    if (!cont) return;
     cont.innerHTML = '';
     let posts = [];
     snap.forEach(c => { posts.push(c.val()); });
@@ -209,9 +203,7 @@ onValue(ref(db, 'posts'), snap => {
     });
 });
 
-// --- ВИЗУАЛЬНЫЕ ЭФФЕКТЫ ---
-
-// Начальный загрузчик
+// Анимация звезд и лоадер
 window.addEventListener('load', () => {
     setTimeout(() => {
         const loader = document.getElementById('initial-loader');
@@ -220,52 +212,31 @@ window.addEventListener('load', () => {
             setTimeout(() => loader.style.display = 'none', 800);
         }
     }, 1500);
+    
+    // Инициализация звезд
+    const canvas = document.getElementById('stars-canvas');
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
+        let stars = [];
+        const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+        window.addEventListener('resize', resize); resize();
+        for(let i=0; i<150; i++) stars.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, size: Math.random()*2, speed: Math.random()*0.5+0.1 });
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#3eafff';
+            stars.forEach(s => {
+                ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, Math.PI*2); ctx.fill();
+                s.y += s.speed; if(s.y > canvas.height) s.y = 0;
+            });
+            requestAnimationFrame(animate);
+        }
+        animate();
+    }
 });
 
-// Анимация звезд
-const canvas = document.getElementById('stars-canvas');
-if (canvas) {
-    const ctx = canvas.getContext('2d');
-    let stars = [];
-    const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
-    window.addEventListener('resize', resize); 
-    resize();
-
-    for(let i=0; i<150; i++) {
-        stars.push({
-            x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height,
-            size: Math.random() * 2,
-            speed: Math.random() * 0.5 + 0.1
-        });
-    }
-
-    function animate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#3eafff';
-        stars.forEach(s => {
-            ctx.beginPath();
-            ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
-            ctx.fill();
-            s.y += s.speed;
-            if(s.y > canvas.height) s.y = 0;
-        });
-        requestAnimationFrame(animate);
-    }
-    animate();
-}
-
-// Сворачивание инпута
 window.toggleInputZone = () => {
     const zone = document.getElementById('chat-input-zone');
     const btn = zone.querySelector('.toggle-input-btn');
-    
     zone.classList.toggle('minimized');
-    
-    // Меняем иконку, чтобы было понятно, что делать
-    if (zone.classList.contains('minimized')) {
-        btn.innerText = '+';
-    } else {
-        btn.innerText = '–';
-    }
+    btn.innerText = zone.classList.contains('minimized') ? '+' : '–';
 };

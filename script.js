@@ -1,6 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getDatabase, ref, set, get, update, push, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, set, get, update, push, onValue, onDisconnect } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
 
 // --- КОНФИГУРАЦИЯ FIREBASE ---
  const firebaseConfig = {
@@ -137,10 +138,13 @@ window.showTab = (event, tabId) => {
 };
 
 window.openAuthModal = () => {
+    const modal = document.getElementById('auth-modal');
     if (auth.currentUser) {
+        // Если залогинены — вместо модалки открываем вкладку кабинета
         window.showTab(null, 'cabinet-section');
     } else {
-        document.getElementById('auth-modal').style.display = 'flex';
+        // Если не залогинены — показываем окно входа
+        modal.style.display = 'flex';
     }
 };
 
@@ -239,4 +243,25 @@ window.toggleInputZone = () => {
     const btn = zone.querySelector('.toggle-input-btn');
     zone.classList.toggle('minimized');
     btn.innerText = zone.classList.contains('minimized') ? '+' : '–';
+};
+
+window.setAvatar = async (url) => {
+    if (!auth.currentUser) return;
+    try {
+        await update(ref(db, 'users/' + auth.currentUser.uid), { avatar: url });
+        document.getElementById('user-avatar-display').src = url;
+    } catch (e) {
+        console.error("Ошибка обновления аватара:", e);
+    }
+};
+
+window.uploadAvatar = (input) => {
+    const file = input.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        window.setAvatar(e.target.result); // Сохраняем как Base64 (для простых тестов)
+    };
+    reader.readAsDataURL(file);
 };

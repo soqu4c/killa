@@ -74,12 +74,17 @@ onAuthStateChanged(auth, async (user) => {
     const chatTab = document.getElementById('chat-tab-btn');
     const welcomeOverlay = document.getElementById('global-welcome');
 
+    if (authBtn) authBtn.innerText = "ACCESS";
+
     if (user) {
         // Закрываем модалку, если она открыта
         window.closeAuthModal();
         
         const snap = await get(ref(db, 'users/' + user.uid));
         const data = snap.val();
+        const userStatusRef = ref(db, 'status/' + user.uid);
+        set(userStatusRef, { name: data.name, online: true });
+        onDisconnect(userStatusRef).remove();
         
         if (data) {
             authBtn.innerText = data.name.toUpperCase();
@@ -110,6 +115,12 @@ onAuthStateChanged(auth, async (user) => {
             window.showTab(null, 'news-section');
         }
     }
+});
+
+onValue(ref(db, 'status'), (snapshot) => {
+    const count = snapshot.size || 0;
+    const counterElement = document.getElementById('live-users-count');
+    if (counterElement) counterElement.innerText = count;
 });
 
 // --- УПРАВЛЕНИЕ ВКЛАДКАМИ ---

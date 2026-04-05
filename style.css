@@ -374,3 +374,23 @@ body {
 }
 
 .logout-btn:hover { background: #ff3e3e; color: #000; }
+
+.chat-box {
+    height: 400px;
+    overflow-y: auto;
+    background: rgba(0,0,0,0.3);
+    padding: 20px;
+    border: 1px solid #111;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Стили для самих сообщений в чате */
+#chat-messages div {
+    background: rgba(255,255,255,0.05);
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+}

@@ -109,15 +109,25 @@
     </div>
 </div>
 
-<div id="chat-input-zone" class="input-broadcast-zone" style="display:none;">
-    <button class="toggle-input-btn" onclick="window.toggleInputHeight()">
-        <span id="toggle-icon">−</span>
-    </button>
+<div id="chat-input-zone" class="input-broadcast-zone">
+    <button class="toggle-input-btn" onclick="toggleInputZone()">–</button>
+    
     <div class="input-glass-container">
         <div class="input-wrapper">
-            <textarea id="chat-msg-input" placeholder="Secure transmission..." rows="1"></textarea>
-            <button class="send-trigger" onclick="window.handleSend()">SEND</button>
+            <textarea 
+                id="chat-msg-input" 
+                placeholder="Secure transmission..." 
+                rows="1"
+                oninput="autoResize(this)"
+            ></textarea>
+            
+            <button class="send-trigger" onclick="handleSend()">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22 2L11 13M22 2L15 22L11 13M11 13L2 9L22 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
         </div>
+        <div class="input-hint">Press Enter to send</div>
     </div>
 </div>
 
@@ -370,6 +380,24 @@
             if(c) c.style.display = c.style.display === 'none' ? 'block' : 'none';
         }
     });
+
+    function autoResize(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
+}
+
+// Добавь отправку по Enter (без Shift)
+document.getElementById('chat-msg-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleSend(); // Твоя функция отправки
+    }
+});
+
+function toggleInputZone() {
+    document.getElementById('chat-input-zone').classList.toggle('minimized');
+}
+
 </script>
 </body>
 </html>

@@ -87,7 +87,7 @@ onAuthStateChanged(auth, async (user) => {
             set(userStatusRef, { name: data.name, online: true });
             onDisconnect(userStatusRef).remove();
 
-            // Обновляем UI
+            // Обновляем UI профиля
             authBtn.innerText = data.name.toUpperCase();
             document.getElementById('user-display-name').innerText = data.name;
             document.getElementById('user-id-number').innerText = data.id;
@@ -96,16 +96,27 @@ onAuthStateChanged(auth, async (user) => {
             document.getElementById('user-avatar-display').src = data.avatar || '';
             document.getElementById('security-level').innerText = 'LVL ' + (roleStyles[data.role]?.level || 1);
             
+            // Показываем кнопку чата в меню
             chatTab.style.display = 'inline-block';
             
+            // ГЛАВНОЕ: Активируем текущую вкладку и инпут
+            const activeBtn = document.querySelector('.tab-btn.active');
+            // Пытаемся вытащить ID секции из атрибута onclick кнопки
+            const currentTabId = activeBtn?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1] || 'news-section';
             
+            // Вызываем showTab, чтобы включилась логика отображения инпута
+            window.showTab(null, currentTabId);
         }
     } else {
-        // Если не залогинен - показываем окно входа сразу
+        // Если не залогинен - сбрасываем UI и показываем модалку
         modal.style.display = 'flex';
-        authBtn.innerText = "ACCESS";
-        chatTab.style.display = 'none';
+        if (authBtn) authBtn.innerText = "ACCESS";
+        if (chatTab) chatTab.style.display = 'none';
         sessionStorage.removeItem('logged_in');
+        
+        // Скрываем инпут, если пользователь вышел
+        const inputZone = document.getElementById('chat-input-zone');
+        if (inputZone) inputZone.style.display = 'none';
     }
 });
 
@@ -210,6 +221,10 @@ window.addEventListener('load', () => {
             setTimeout(() => loader.style.display = 'none', 800);
         }
     }, 1500);
+
+    if (auth.currentUser) {
+        window.showTab(null, 'news-section');
+    }
     
     // Инициализация звезд
     const canvas = document.getElementById('stars-canvas');

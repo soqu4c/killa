@@ -85,8 +85,21 @@ onAuthStateChanged(auth, async (user) => {
             document.getElementById('user-avatar-display').src = data.avatar || '';
             document.getElementById('security-level').innerText = 'LVL ' + (roleStyles[data.role]?.level || 1);
             chatTab.style.display = 'inline-block';
+
+            // --- ЛОГИКА ПОДПИСЧИКОВ В КАБИНЕТЕ ---
+            onValue(ref(db, `follows/${user.uid}`), (s) => {
+                const count = s.exists() ? Object.keys(s.val()).length : 0;
+                const el = document.getElementById('user-following-count');
+                if(el) el.innerText = count;
+            });
+
+            onValue(ref(db, 'follows'), (s) => {
+                let fCount = 0;
+                s.forEach((uF) => { if (uF.hasChild(user.uid)) fCount++; });
+                const el = document.getElementById('user-followers-count');
+                if(el) el.innerText = fCount;
+            });
             
-            // При входе обновляем текущую вкладку (по умолчанию новости)
             const activeBtn = document.querySelector('.tab-btn.active');
             const currentTabId = activeBtn?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1] || 'news-section';
             window.showTab(null, currentTabId);
@@ -126,7 +139,6 @@ onValue(ref(db, 'status'), (snap) => {
     if(countEl) countEl.innerText = snap.size || 0;
 });
 
-// Загрузка ВСЕХ админов в раздел INFO
 onValue(ref(db, 'users'), (snap) => {
     const cont = document.getElementById('admins-cont');
     if (!cont) return;
@@ -134,7 +146,6 @@ onValue(ref(db, 'users'), (snap) => {
     
     snap.forEach(child => {
         const u = child.val();
-        // Показываем всех с ролью Owner, Dep.Owner или Developer (независимо от онлайна)
         if (u.role === 'Owner' || u.role === 'Dep.Owner' || u.role === 'Developer') {
             const color = roleStyles[u.role]?.color || '#fff';
             cont.innerHTML += `
@@ -159,7 +170,6 @@ window.viewUserProfile = async (uid) => {
     document.getElementById('view-role').style.color = roleStyles[data.role]?.color || '#888';
     document.getElementById('view-id').innerText = data.id;
     
-    // Показываем уровень безопасности в модалке
     const secEl = document.getElementById('view-security');
     if(secEl) secEl.innerText = 'LVL ' + (roleStyles[data.role]?.level || 1);
 
@@ -190,7 +200,7 @@ window.toggleFollow = async (targetUid) => {
     } else {
         await set(followRef, true);
     }
-    window.viewUserProfile(targetUid); // Обновляем состояние кнопки в модалке
+    window.viewUserProfile(targetUid); 
 };
 
 // --- ВКЛАДКИ И ИНТЕРФЕЙС ---
@@ -256,7 +266,6 @@ onValue(ref(db, 'posts'), snap => {
     });
 });
 
-// --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ---
 window.handleLogout = () => signOut(auth).then(() => location.reload());
 window.openAuthModal = () => auth.currentUser ? window.showTab(null, 'cabinet-section') : document.getElementById('auth-modal').style.display = 'flex';
 window.closeAuthModal = () => {
@@ -286,9 +295,12 @@ window.setAvatar = async (url) => {
 };
 
 window.uploadAvatar = (input) => {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 500000) { alert("Файл слишком большой! Лимит 500Кб."); return; }
     const reader = new FileReader();
     reader.onload = (e) => window.setAvatar(e.target.result);
-    if (input.files[0]) reader.readAsDataURL(input.files[0]);
+    reader.readAsDataURL(file);
 };
 
 window.addEventListener('load', () => {
@@ -302,11 +314,10 @@ window.addEventListener('load', () => {
     }, 1000);
 });
 
+// Продвинутая защита
 document.addEventListener('contextmenu', event => event.preventDefault());
-
-// Запрет некоторых комбинаций клавиш (F12, Ctrl+Shift+I)
 document.onkeydown = function(e) {
-    if(e.keyCode == 123) return false; // F12
+    if(e.keyCode == 123) return false; 
     if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false;
     if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) return false;
     if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;

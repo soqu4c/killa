@@ -44,6 +44,20 @@
     <div id="chat-messages" class="chat-box"></div>
     </section>
 
+    <div id="user-profile-modal" class="modal-overlay" style="display:none;" onclick="this.style.display='none'">
+    <div class="modal-card" onclick="event.stopPropagation()">
+        <div class="profile-header">
+            <img id="view-avatar" src="" class="avatar-large">
+            <h2 id="view-name">---</h2>
+            <span id="view-role" class="role-badge">---</span>
+        </div>
+        <div class="profile-stats">
+            <p>ID: <span id="view-id">---</span></p>
+        </div>
+        <button id="follow-btn" class="auth-submit">FOLLOW</button>
+    </div>
+</div>
+
     <section id="cabinet-section" class="content-section" style="display: none;">
         <div class="card profile-card">
             <h1>PROFILE CONFIG</h1>

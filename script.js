@@ -2,18 +2,18 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAuth, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getDatabase, ref, set, get, update, push, onValue, onDisconnect } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-
 // --- КОНФИГУРАЦИЯ FIREBASE ---
- const firebaseConfig = {
-        apiKey: "AIzaSyASOKVgbFNStdieGXpbMuVVX3Y8P7NlY6Y",
-        authDomain: "killa-c8794.firebaseapp.com",
-        databaseURL: "https://killa-c8794-default-rtdb.firebaseio.com",
-        projectId: "killa-c8794",
-        storageBucket: "killa-c8794.firebasestorage.app",
-        messagingSenderId: "209292210267",
-        appId: "1:209292210267:web:b320358f45a21ad1284f7e",
-        measurementId: "G-BFYYQELE6C"
-    };;
+const firebaseConfig = {
+    apiKey: "AIzaSyASOKVgbFNStdieGXpbMuVVX3Y8P7NlY6Y",
+    authDomain: "killa-c8794.firebaseapp.com",
+    databaseURL: "https://killa-c8794-default-rtdb.firebaseio.com",
+    projectId: "killa-c8794",
+    storageBucket: "killa-c8794.firebasestorage.app",
+    messagingSenderId: "209292210267",
+    appId: "1:209292210267:web:b320358f45a21ad1284f7e",
+    measurementId: "G-BFYYQELE6C"
+};
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
@@ -21,11 +21,12 @@ const db = getDatabase(app);
 const roleStyles = {
     'Developer': { color: '#3eafff', level: 6 },
     'Owner': { color: '#ff3e3e', level: 5 },
+    'Dep.Owner': { color: '#ff7e3e', level: 4 },
     'Крутой поц': { color: '#ae70ff', level: 3 },
     'Member': { color: '#888', level: 1 }
 };
 
-// --- АВТОРИЗАЦИЯ И РЕГИСТРАЦИЯ ---
+// --- АВТОРИЗАЦИЯ ---
 window.toggleAuthMode = () => {
     const title = document.getElementById('modal-title');
     const nick = document.getElementById('auth-nickname');
@@ -63,7 +64,7 @@ window.handleAuth = async () => {
         } else {
             await signInWithEmailAndPassword(auth, email, pass);
         }
-        window.closeAuthModal();
+        document.getElementById('auth-modal').style.display = 'none';
     } catch (e) { 
         alert("Ошибка доступа: " + e.message); 
     }
@@ -76,18 +77,15 @@ onAuthStateChanged(auth, async (user) => {
     const modal = document.getElementById('auth-modal');
 
     if (user) {
-        modal.style.display = 'none'; // Скрываем вход, если залогинены
-        
+        modal.style.display = 'none';
         const snap = await get(ref(db, 'users/' + user.uid));
         const data = snap.val();
         
         if (data) {
-            // Статус Онлайн
             const userStatusRef = ref(db, 'status/' + user.uid);
             set(userStatusRef, { name: data.name, online: true });
             onDisconnect(userStatusRef).remove();
 
-            // Обновляем UI профиля
             authBtn.innerText = data.name.toUpperCase();
             document.getElementById('user-display-name').innerText = data.name;
             document.getElementById('user-id-number').innerText = data.id;
@@ -96,25 +94,16 @@ onAuthStateChanged(auth, async (user) => {
             document.getElementById('user-avatar-display').src = data.avatar || '';
             document.getElementById('security-level').innerText = 'LVL ' + (roleStyles[data.role]?.level || 1);
             
-            // Показываем кнопку чата в меню
             chatTab.style.display = 'inline-block';
             
-            // ГЛАВНОЕ: Активируем текущую вкладку и инпут
             const activeBtn = document.querySelector('.tab-btn.active');
-            // Пытаемся вытащить ID секции из атрибута onclick кнопки
             const currentTabId = activeBtn?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1] || 'news-section';
-            
-            // Вызываем showTab, чтобы включилась логика отображения инпута
             window.showTab(null, currentTabId);
         }
     } else {
-        // Если не залогинен - сбрасываем UI и показываем модалку
         modal.style.display = 'flex';
         if (authBtn) authBtn.innerText = "ACCESS";
         if (chatTab) chatTab.style.display = 'none';
-        sessionStorage.removeItem('logged_in');
-        
-        // Скрываем инпут, если пользователь вышел
         const inputZone = document.getElementById('chat-input-zone');
         if (inputZone) inputZone.style.display = 'none';
     }
@@ -127,7 +116,7 @@ onValue(ref(db, 'status'), (snapshot) => {
     if (counterElement) counterElement.innerText = count;
 });
 
-// --- ОСТАЛЬНЫЕ ФУНКЦИИ ---
+// --- ВКЛАДКИ ---
 window.showTab = (event, tabId) => {
     document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none');
     document.getElementById(tabId).style.display = 'block';
@@ -143,18 +132,14 @@ window.showTab = (event, tabId) => {
 };
 
 window.openAuthModal = () => {
-    const modal = document.getElementById('auth-modal');
     if (auth.currentUser) {
-        // Если залогинены — вместо модалки открываем вкладку кабинета
         window.showTab(null, 'cabinet-section');
     } else {
-        // Если не залогинены — показываем окно входа
-        modal.style.display = 'flex';
+        document.getElementById('auth-modal').style.display = 'flex';
     }
 };
 
 window.closeAuthModal = () => {
-    // Не даем закрыть модалку, если пользователь не вошел
     if (!auth.currentUser) {
         alert("Требуется авторизация в системе KILLA");
         return;
@@ -166,6 +151,7 @@ window.handleLogout = () => {
     signOut(auth).then(() => location.reload());
 };
 
+// --- СООБЩЕНИЯ И НОВОСТИ ---
 window.handleSend = async () => {
     const input = document.getElementById('chat-msg-input');
     if (!input.value.trim() || !auth.currentUser) return;
@@ -177,6 +163,7 @@ window.handleSend = async () => {
     await push(ref(db, isChat ? 'chat_messages' : 'posts'), {
         text: input.value,
         author: userData.name,
+        uid: auth.currentUser.uid, // Добавляем UID для кликабельности
         role: userData.role,
         timestamp: Date.now()
     });
@@ -191,7 +178,8 @@ onValue(ref(db, 'chat_messages'), snap => {
     snap.forEach(child => {
         const m = child.val();
         const color = roleStyles[m.role]?.color || '#888';
-        box.innerHTML += `<div><b style="color:${color}">${m.author}:</b> ${m.text}</div>`;
+        // Делаем ник кликабельным
+        box.innerHTML += `<div><b style="color:${color}; cursor:pointer" onclick="viewUserProfile('${m.uid}')">${m.author}:</b> ${m.text}</div>`;
     });
     box.scrollTop = box.scrollHeight;
 });
@@ -201,86 +189,83 @@ onValue(ref(db, 'posts'), snap => {
     if (!cont) return;
     cont.innerHTML = '';
     let posts = [];
-    snap.forEach(c => { posts.push(c.val()); });
+    snap.forEach(c => { posts.push({ ...c.val(), id: c.key }); });
     posts.reverse().forEach(p => {
         const color = roleStyles[p.role]?.color || '#888';
         cont.innerHTML += `
             <div class="card" style="border-left: 3px solid ${color}; margin-bottom: 15px;">
-                <small style="color:${color}; font-weight: 900;">${p.author.toUpperCase()}</small>
+                <small style="color:${color}; font-weight: 900; cursor:pointer" onclick="viewUserProfile('${p.uid}')">${p.author.toUpperCase()}</small>
                 <p style="margin-top: 10px;">${p.text}</p>
             </div>`;
     });
 });
 
-// Анимация звезд и лоадер
-window.addEventListener('load', () => {
-    setTimeout(() => {
-        const loader = document.getElementById('initial-loader');
-        if (loader) {
-            loader.style.opacity = '0';
-            setTimeout(() => loader.style.display = 'none', 800);
-        }
-    }, 1500);
+// --- ПРОФИЛИ И ПОДПИСКИ ---
+window.viewUserProfile = async (uid) => {
+    const snap = await get(ref(db, 'users/' + uid));
+    const data = snap.val();
+    if (!data) return;
 
-    if (auth.currentUser) {
-        window.showTab(null, 'news-section');
-    }
-    
-    // Инициализация звезд
-    const canvas = document.getElementById('stars-canvas');
-    if (canvas) {
-        const ctx = canvas.getContext('2d');
-        let stars = [];
-        const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
-        window.addEventListener('resize', resize); resize();
-        for(let i=0; i<150; i++) stars.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, size: Math.random()*2, speed: Math.random()*0.5+0.1 });
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#3eafff';
-            stars.forEach(s => {
-                ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, Math.PI*2); ctx.fill();
-                s.y += s.speed; if(s.y > canvas.height) s.y = 0;
-            });
-            requestAnimationFrame(animate);
-        }
-        animate();
-    }
-});
+    document.getElementById('view-name').innerText = data.name;
+    document.getElementById('view-avatar').src = data.avatar || '';
+    document.getElementById('view-role').innerText = data.role;
+    document.getElementById('view-role').style.color = roleStyles[data.role]?.color || '#888';
+    document.getElementById('view-id').innerText = data.id;
 
-window.toggleInputZone = () => {
-    const zone = document.getElementById('chat-input-zone');
-    const btn = zone.querySelector('.toggle-input-btn');
-    zone.classList.toggle('minimized');
-    btn.innerText = zone.classList.contains('minimized') ? '+' : '–';
+    const modal = document.getElementById('user-profile-modal');
+    modal.style.display = 'flex';
+
+    const btn = document.getElementById('follow-btn');
+    if (auth.currentUser && uid !== auth.currentUser.uid) {
+        btn.style.display = 'block';
+        btn.onclick = () => window.toggleFollow(uid);
+    } else {
+        btn.style.display = 'none';
+    }
 };
 
-window.setAvatar = async (url) => {
+window.toggleFollow = async (targetUid) => {
     if (!auth.currentUser) return;
-    try {
-        await update(ref(db, 'users/' + auth.currentUser.uid), { avatar: url });
-        document.getElementById('user-avatar-display').src = url;
-    } catch (e) {
-        console.error("Ошибка обновления аватара:", e);
+    const followRef = ref(db, `follows/${auth.currentUser.uid}/${targetUid}`);
+    const snap = await get(followRef);
+
+    if (snap.exists()) {
+        await set(followRef, null);
+        alert("UNFOLLOWED");
+    } else {
+        await set(followRef, true);
+        alert("FOLLOWING ACQUIRED");
     }
 };
 
-window.uploadAvatar = (input) => {
-    const file = input.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        window.setAvatar(e.target.result); // Сохраняем как Base64 (для простых тестов)
-    };
-    reader.readAsDataURL(file);
-};
-
-window.autoResize = (textarea) => {
-    textarea.style.height = 'auto';
-    textarea.style.height = textarea.scrollHeight + 'px';
-};
-
+// --- ВСПОМОГАТЕЛЬНОЕ ---
 window.autoResize = (t) => {
     t.style.height = 'auto';
     t.style.height = t.scrollHeight + 'px';
 };
+
+window.toggleInputZone = () => {
+    const zone = document.getElementById('chat-input-zone');
+    zone.classList.toggle('minimized');
+    zone.querySelector('.toggle-input-btn').innerText = zone.classList.contains('minimized') ? '+' : '–';
+};
+
+window.setAvatar = async (url) => {
+    if (auth.currentUser) {
+        await update(ref(db, 'users/' + auth.currentUser.uid), { avatar: url });
+        document.getElementById('user-avatar-display').src = url;
+    }
+};
+
+window.uploadAvatar = (input) => {
+    const reader = new FileReader();
+    reader.onload = (e) => window.setAvatar(e.target.result);
+    if (input.files[0]) reader.readAsDataURL(input.files[0]);
+};
+
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        const loader = document.getElementById('initial-loader');
+        if (loader) { loader.style.opacity = '0'; setTimeout(() => loader.style.display = 'none', 800); }
+    }, 1000);
+});

@@ -37,6 +37,12 @@
             <p class="status-online">Status: ONLINE</p>
             <p>Welcome to KILLA node. All data encrypted.</p>
         </div>
+
+        <div id="admin-list-card" class="card">
+            <h4>STRUCTURAL MANAGEMENT</h4>
+            <div id="admins-cont" class="admins-grid">
+                </div>
+        </div>
     </section>
 
     <section id="chat-section" class="content-section" style="display: none;">
@@ -52,6 +58,7 @@
             </div>
             <div class="profile-stats">
                 <p>ID: <span id="view-id">---</span></p>
+                <p>RANK: <span id="view-security">---</span></p>
             </div>
             <button id="follow-btn" class="auth-submit">FOLLOW</button>
         </div>
@@ -69,14 +76,6 @@
             </div>
 
             <div class="stats-grid">
-                <div class="stat-item">
-                    <span class="stat-label">FOLLOWERS</span>
-                    <span id="user-followers-count" class="stat-value">0</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">FOLLOWING</span>
-                    <span id="user-following-count" class="stat-value">0</span>
-                </div>
                 <div class="stat-item">
                     <span class="stat-label">USER ID</span>
                     <span id="user-id-number" class="stat-value">---</span>
@@ -128,9 +127,10 @@
 
 <div class="system-footer-status">
     <span class="live-dot"></span> NODE: <span class="accent-white">KILLA-01</span> 
-    USERS: <span id="live-users-count" class="accent-white">0</span>
+    USERS ONLINE: <span id="live-users-count" class="accent-white">0</span>
 </div>
 
 <script type="module" src="script.js"></script>
+
 </body>
 </html>

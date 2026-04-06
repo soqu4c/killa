@@ -31,18 +31,14 @@ window.toggleAuthMode = () => {
     const title = document.getElementById('modal-title');
     const nick = document.getElementById('auth-nickname');
     const btn = document.getElementById('auth-submit-btn');
-    const toggleText = document.getElementById('auth-toggle-text');
-
     if (nick.style.display === 'none' || nick.style.display === '') {
         title.innerText = "SYSTEM REGISTRATION";
         nick.style.display = 'block';
         btn.innerText = "CREATE ACCOUNT";
-        toggleText.innerText = "Уже есть аккаунт? Войти";
     } else {
         title.innerText = "SYSTEM ACCESS";
         nick.style.display = 'none';
         btn.innerText = "CONFIRM";
-        toggleText.innerText = "Регистрация";
     }
 };
 
@@ -51,7 +47,6 @@ window.handleAuth = async () => {
     const pass = document.getElementById('auth-password').value;
     const nick = document.getElementById('auth-nickname').value;
     const isReg = document.getElementById('auth-nickname').style.display === 'block';
-
     try {
         if (isReg) {
             const res = await createUserWithEmailAndPassword(auth, email, pass);
@@ -64,10 +59,7 @@ window.handleAuth = async () => {
         } else {
             await signInWithEmailAndPassword(auth, email, pass);
         }
-        document.getElementById('auth-modal').style.display = 'none';
-    } catch (e) { 
-        alert("Ошибка доступа: " + e.message); 
-    }
+    } catch (e) { alert("Ошибка: " + e.message); }
 };
 
 // --- НАБЛЮДАТЕЛЬ (AUTH OBSERVER) ---
@@ -80,10 +72,9 @@ onAuthStateChanged(auth, async (user) => {
         modal.style.display = 'none';
         const snap = await get(ref(db, 'users/' + user.uid));
         const data = snap.val();
-        
         if (data) {
             const userStatusRef = ref(db, 'status/' + user.uid);
-            set(userStatusRef, { name: data.name, online: true });
+            set(userStatusRef, { name: data.name, online: true, role: data.role });
             onDisconnect(userStatusRef).remove();
 
             authBtn.innerText = data.name.toUpperCase();
@@ -93,110 +84,63 @@ onAuthStateChanged(auth, async (user) => {
             document.getElementById('user-role-badge').style.color = roleStyles[data.role]?.color || '#888';
             document.getElementById('user-avatar-display').src = data.avatar || '';
             document.getElementById('security-level').innerText = 'LVL ' + (roleStyles[data.role]?.level || 1);
-            
             chatTab.style.display = 'inline-block';
             
-            const activeBtn = document.querySelector('.tab-btn.active');
-            const currentTabId = activeBtn?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1] || 'news-section';
-            window.showTab(null, currentTabId);
+            window.showTab(null, 'news-section');
         }
     } else {
         modal.style.display = 'flex';
-        if (authBtn) authBtn.innerText = "ACCESS";
-        if (chatTab) chatTab.style.display = 'none';
-        const inputZone = document.getElementById('chat-input-zone');
-        if (inputZone) inputZone.style.display = 'none';
+        authBtn.innerText = "ACCESS";
+        chatTab.style.display = 'none';
     }
 });
 
-// Счетчик пользователей
-onValue(ref(db, 'status'), (snapshot) => {
-    const count = snapshot.size || 0;
-    const counterElement = document.getElementById('live-users-count');
-    if (counterElement) counterElement.innerText = count;
-});
-
-// --- ВКЛАДКИ ---
-window.showTab = (event, tabId) => {
-    document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none');
-    document.getElementById(tabId).style.display = 'block';
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    if (event) event.currentTarget.classList.add('active');
-
-    const inputZone = document.getElementById('chat-input-zone');
-    if (auth.currentUser && (tabId === 'chat-section' || tabId === 'news-section')) {
-        inputZone.style.display = 'block';
-    } else {
-        inputZone.style.display = 'none';
+// --- ЗВЕЗДНЫЙ ФОН ---
+function initStars() {
+    const canvas = document.getElementById('stars-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let stars = [];
+    const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+    window.addEventListener('resize', resize);
+    resize();
+    for(let i=0; i<150; i++) stars.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, size: Math.random()*2, speed: Math.random()*0.5+0.1 });
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#3eafff';
+        stars.forEach(s => {
+            ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, Math.PI*2); ctx.fill();
+            s.y += s.speed; if(s.y > canvas.height) s.y = 0;
+        });
+        requestAnimationFrame(animate);
     }
-};
+    animate();
+}
 
-window.openAuthModal = () => {
-    if (auth.currentUser) {
-        window.showTab(null, 'cabinet-section');
-    } else {
-        document.getElementById('auth-modal').style.display = 'flex';
+// --- СПИСОК АДМИНИСТРАЦИИ ---
+onValue(ref(db, 'status'), (snap) => {
+    const countEl = document.getElementById('live-users-count');
+    countEl.innerText = snap.size || 0;
+
+    // Ищем Owner и Dep.Owner в INFO секции или создадим блок
+    const infoSec = document.getElementById('info-section');
+    let adminList = document.getElementById('admin-online-list');
+    if (!adminList) {
+        adminList = document.createElement('div');
+        adminList.id = 'admin-online-list';
+        adminList.className = 'card';
+        adminList.innerHTML = '<h4>MANAGEMENT ONLINE</h4><div id="admins-cont"></div>';
+        infoSec.appendChild(adminList);
     }
-};
-
-window.closeAuthModal = () => {
-    if (!auth.currentUser) {
-        alert("Требуется авторизация в системе KILLA");
-        return;
-    }
-    document.getElementById('auth-modal').style.display = 'none';
-};
-
-window.handleLogout = () => {
-    signOut(auth).then(() => location.reload());
-};
-
-// --- СООБЩЕНИЯ И НОВОСТИ ---
-window.handleSend = async () => {
-    const input = document.getElementById('chat-msg-input');
-    if (!input.value.trim() || !auth.currentUser) return;
-
-    const snap = await get(ref(db, 'users/' + auth.currentUser.uid));
-    const userData = snap.val();
-    const isChat = document.getElementById('chat-section').style.display === 'block';
-
-    await push(ref(db, isChat ? 'chat_messages' : 'posts'), {
-        text: input.value,
-        author: userData.name,
-        uid: auth.currentUser.uid, // Добавляем UID для кликабельности
-        role: userData.role,
-        timestamp: Date.now()
-    });
-
-    input.value = '';
-};
-
-onValue(ref(db, 'chat_messages'), snap => {
-    const box = document.getElementById('chat-messages');
-    if (!box) return;
-    box.innerHTML = '';
-    snap.forEach(child => {
-        const m = child.val();
-        const color = roleStyles[m.role]?.color || '#888';
-        // Делаем ник кликабельным
-        box.innerHTML += `<div><b style="color:${color}; cursor:pointer" onclick="viewUserProfile('${m.uid}')">${m.author}:</b> ${m.text}</div>`;
-    });
-    box.scrollTop = box.scrollHeight;
-});
-
-onValue(ref(db, 'posts'), snap => {
-    const cont = document.getElementById('news-container');
-    if (!cont) return;
+    
+    const cont = document.getElementById('admins-cont');
     cont.innerHTML = '';
-    let posts = [];
-    snap.forEach(c => { posts.push({ ...c.val(), id: c.key }); });
-    posts.reverse().forEach(p => {
-        const color = roleStyles[p.role]?.color || '#888';
-        cont.innerHTML += `
-            <div class="card" style="border-left: 3px solid ${color}; margin-bottom: 15px;">
-                <small style="color:${color}; font-weight: 900; cursor:pointer" onclick="viewUserProfile('${p.uid}')">${p.author.toUpperCase()}</small>
-                <p style="margin-top: 10px;">${p.text}</p>
-            </div>`;
+    snap.forEach(child => {
+        const u = child.val();
+        if (u.role === 'Owner' || u.role === 'Dep.Owner') {
+            const color = roleStyles[u.role].color;
+            cont.innerHTML += `<p style="color:${color}; cursor:pointer" onclick="viewUserProfile('${child.key}')">● ${u.name} (${u.role})</p>`;
+        }
     });
 });
 
@@ -218,6 +162,9 @@ window.viewUserProfile = async (uid) => {
     const btn = document.getElementById('follow-btn');
     if (auth.currentUser && uid !== auth.currentUser.uid) {
         btn.style.display = 'block';
+        const followRef = ref(db, `follows/${auth.currentUser.uid}/${uid}`);
+        const fSnap = await get(followRef);
+        btn.innerText = fSnap.exists() ? "UNFOLLOW" : "FOLLOW";
         btn.onclick = () => window.toggleFollow(uid);
     } else {
         btn.style.display = 'none';
@@ -225,47 +172,78 @@ window.viewUserProfile = async (uid) => {
 };
 
 window.toggleFollow = async (targetUid) => {
-    if (!auth.currentUser) return;
     const followRef = ref(db, `follows/${auth.currentUser.uid}/${targetUid}`);
     const snap = await get(followRef);
-
     if (snap.exists()) {
         await set(followRef, null);
-        alert("UNFOLLOWED");
     } else {
         await set(followRef, true);
-        alert("FOLLOWING ACQUIRED");
     }
+    window.viewUserProfile(targetUid); // Обновить кнопку
 };
 
-// --- ВСПОМОГАТЕЛЬНОЕ ---
-window.autoResize = (t) => {
-    t.style.height = 'auto';
-    t.style.height = t.scrollHeight + 'px';
-};
-
-window.toggleInputZone = () => {
+// --- ОСТАЛЬНОЕ ---
+window.showTab = (e, id) => {
+    document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none');
+    document.getElementById(id).style.display = 'block';
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    if (e) e.currentTarget.classList.add('active');
+    
     const zone = document.getElementById('chat-input-zone');
-    zone.classList.toggle('minimized');
-    zone.querySelector('.toggle-input-btn').innerText = zone.classList.contains('minimized') ? '+' : '–';
+    zone.style.display = (auth.currentUser && (id === 'chat-section' || id === 'news-section')) ? 'block' : 'none';
 };
 
-window.setAvatar = async (url) => {
-    if (auth.currentUser) {
-        await update(ref(db, 'users/' + auth.currentUser.uid), { avatar: url });
-        document.getElementById('user-avatar-display').src = url;
-    }
+window.handleSend = async () => {
+    const input = document.getElementById('chat-msg-input');
+    if (!input.value.trim()) return;
+    const userData = (await get(ref(db, 'users/' + auth.currentUser.uid))).val();
+    const path = document.getElementById('chat-section').style.display === 'block' ? 'chat_messages' : 'posts';
+    
+    await push(ref(db, path), {
+        text: input.value,
+        author: userData.name,
+        uid: auth.currentUser.uid,
+        role: userData.role,
+        timestamp: Date.now()
+    });
+    input.value = '';
 };
 
-window.uploadAvatar = (input) => {
-    const reader = new FileReader();
-    reader.onload = (e) => window.setAvatar(e.target.result);
-    if (input.files[0]) reader.readAsDataURL(input.files[0]);
+onValue(ref(db, 'chat_messages'), snap => {
+    const box = document.getElementById('chat-messages');
+    if (!box) return;
+    box.innerHTML = '';
+    snap.forEach(c => {
+        const m = c.val();
+        box.innerHTML += `<div><b style="color:${roleStyles[m.role]?.color}; cursor:pointer" onclick="viewUserProfile('${m.uid}')">${m.author}:</b> ${m.text}</div>`;
+    });
+    box.scrollTop = box.scrollHeight;
+});
+
+onValue(ref(db, 'posts'), snap => {
+    const cont = document.getElementById('news-container');
+    if (!cont) return;
+    cont.innerHTML = '';
+    let arr = []; snap.forEach(c => arr.push(c.val()));
+    arr.reverse().forEach(p => {
+        cont.innerHTML += `<div class="card" style="border-left:3px solid ${roleStyles[p.role]?.color}"><small onclick="viewUserProfile('${p.uid}')" style="cursor:pointer; color:${roleStyles[p.role]?.color}">${p.author}</small><p>${p.text}</p></div>`;
+    });
+});
+
+window.handleLogout = () => signOut(auth).then(() => location.reload());
+window.openAuthModal = () => auth.currentUser ? window.showTab(null, 'cabinet-section') : document.getElementById('auth-modal').style.display = 'flex';
+window.closeAuthModal = () => auth.currentUser ? document.getElementById('auth-modal').style.display = 'none' : alert("Login required");
+window.autoResize = (t) => { t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; };
+window.toggleInputZone = () => {
+    const z = document.getElementById('chat-input-zone');
+    z.classList.toggle('minimized');
+    z.querySelector('.toggle-input-btn').innerText = z.classList.contains('minimized') ? '+' : '–';
 };
 
 window.addEventListener('load', () => {
+    initStars();
     setTimeout(() => {
-        const loader = document.getElementById('initial-loader');
-        if (loader) { loader.style.opacity = '0'; setTimeout(() => loader.style.display = 'none', 800); }
+        const l = document.getElementById('initial-loader');
+        if(l) { l.style.opacity = '0'; setTimeout(() => l.style.display='none', 800); }
     }, 1000);
 });

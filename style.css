@@ -394,3 +394,22 @@ body {
     border-radius: 4px;
     font-size: 14px;
 }
+
+/* Ограничение размера аватарки в просмотре профиля */
+.avatar-large {
+    width: 150px;           /* Фиксированная ширина */
+    height: 150px;          /* Фиксированная высота */
+    object-fit: cover;      /* Чтобы фото не растягивалось */
+    border-radius: 8px;     /* Скругление в стиле KILLA */
+    border: 2px solid #3eafff;
+    margin-bottom: 20px;
+    display: block;         /* Центрирование */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Центрируем содержимое шапки модалки */
+.profile-header {
+    text-align: center;
+    margin-bottom: 20px;
+}

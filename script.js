@@ -86,7 +86,10 @@ onAuthStateChanged(auth, async (user) => {
             document.getElementById('security-level').innerText = 'LVL ' + (roleStyles[data.role]?.level || 1);
             chatTab.style.display = 'inline-block';
             
-            window.showTab(null, 'news-section');
+            // При входе обновляем текущую вкладку (по умолчанию новости)
+            const activeBtn = document.querySelector('.tab-btn.active');
+            const currentTabId = activeBtn?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1] || 'news-section';
+            window.showTab(null, currentTabId);
         }
     } else {
         modal.style.display = 'flex';
@@ -117,29 +120,29 @@ function initStars() {
     animate();
 }
 
-// --- СПИСОК АДМИНИСТРАЦИИ ---
+// --- СПИСОК АДМИНИСТРАЦИИ (ОБЩИЙ) ---
 onValue(ref(db, 'status'), (snap) => {
     const countEl = document.getElementById('live-users-count');
-    countEl.innerText = snap.size || 0;
+    if(countEl) countEl.innerText = snap.size || 0;
+});
 
-    // Ищем Owner и Dep.Owner в INFO секции или создадим блок
-    const infoSec = document.getElementById('info-section');
-    let adminList = document.getElementById('admin-online-list');
-    if (!adminList) {
-        adminList = document.createElement('div');
-        adminList.id = 'admin-online-list';
-        adminList.className = 'card';
-        adminList.innerHTML = '<h4>MANAGEMENT ONLINE</h4><div id="admins-cont"></div>';
-        infoSec.appendChild(adminList);
-    }
-    
+// Загрузка ВСЕХ админов в раздел INFO
+onValue(ref(db, 'users'), (snap) => {
     const cont = document.getElementById('admins-cont');
-    cont.innerHTML = '';
+    if (!cont) return;
+    cont.innerHTML = ''; 
+    
     snap.forEach(child => {
         const u = child.val();
-        if (u.role === 'Owner' || u.role === 'Dep.Owner') {
-            const color = roleStyles[u.role].color;
-            cont.innerHTML += `<p style="color:${color}; cursor:pointer" onclick="viewUserProfile('${child.key}')">● ${u.name} (${u.role})</p>`;
+        // Показываем всех с ролью Owner, Dep.Owner или Developer (независимо от онлайна)
+        if (u.role === 'Owner' || u.role === 'Dep.Owner' || u.role === 'Developer') {
+            const color = roleStyles[u.role]?.color || '#fff';
+            cont.innerHTML += `
+                <div class="admin-item" style="border-left: 2px solid ${color}; padding-left: 10px; margin: 10px 0; cursor: pointer;" onclick="viewUserProfile('${child.key}')">
+                    <div style="color: ${color}; font-weight: bold;">${u.name.toUpperCase()}</div>
+                    <div style="font-size: 10px; opacity: 0.6;">${u.role}</div>
+                </div>
+            `;
         }
     });
 });
@@ -155,6 +158,10 @@ window.viewUserProfile = async (uid) => {
     document.getElementById('view-role').innerText = data.role;
     document.getElementById('view-role').style.color = roleStyles[data.role]?.color || '#888';
     document.getElementById('view-id').innerText = data.id;
+    
+    // Показываем уровень безопасности в модалке
+    const secEl = document.getElementById('view-security');
+    if(secEl) secEl.innerText = 'LVL ' + (roleStyles[data.role]?.level || 1);
 
     const modal = document.getElementById('user-profile-modal');
     modal.style.display = 'flex';
@@ -165,13 +172,17 @@ window.viewUserProfile = async (uid) => {
         const followRef = ref(db, `follows/${auth.currentUser.uid}/${uid}`);
         const fSnap = await get(followRef);
         btn.innerText = fSnap.exists() ? "UNFOLLOW" : "FOLLOW";
-        btn.onclick = () => window.toggleFollow(uid);
+        btn.onclick = (e) => {
+            e.stopPropagation();
+            window.toggleFollow(uid);
+        };
     } else {
         btn.style.display = 'none';
     }
 };
 
 window.toggleFollow = async (targetUid) => {
+    if (!auth.currentUser) return;
     const followRef = ref(db, `follows/${auth.currentUser.uid}/${targetUid}`);
     const snap = await get(followRef);
     if (snap.exists()) {
@@ -179,25 +190,32 @@ window.toggleFollow = async (targetUid) => {
     } else {
         await set(followRef, true);
     }
-    window.viewUserProfile(targetUid); // Обновить кнопку
+    window.viewUserProfile(targetUid); // Обновляем состояние кнопки в модалке
 };
 
-// --- ОСТАЛЬНОЕ ---
+// --- ВКЛАДКИ И ИНТЕРФЕЙС ---
 window.showTab = (e, id) => {
     document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none');
-    document.getElementById(id).style.display = 'block';
+    const target = document.getElementById(id);
+    if(target) target.style.display = 'block';
+    
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     if (e) e.currentTarget.classList.add('active');
     
     const zone = document.getElementById('chat-input-zone');
-    zone.style.display = (auth.currentUser && (id === 'chat-section' || id === 'news-section')) ? 'block' : 'none';
+    if(zone) {
+        zone.style.display = (auth.currentUser && (id === 'chat-section' || id === 'news-section')) ? 'block' : 'none';
+    }
 };
 
 window.handleSend = async () => {
     const input = document.getElementById('chat-msg-input');
-    if (!input.value.trim()) return;
-    const userData = (await get(ref(db, 'users/' + auth.currentUser.uid))).val();
-    const path = document.getElementById('chat-section').style.display === 'block' ? 'chat_messages' : 'posts';
+    if (!input || !input.value.trim() || !auth.currentUser) return;
+    
+    const snap = await get(ref(db, 'users/' + auth.currentUser.uid));
+    const userData = snap.val();
+    const isChat = document.getElementById('chat-section').style.display === 'block';
+    const path = isChat ? 'chat_messages' : 'posts';
     
     await push(ref(db, path), {
         text: input.value,
@@ -207,6 +225,7 @@ window.handleSend = async () => {
         timestamp: Date.now()
     });
     input.value = '';
+    autoResize(input);
 };
 
 onValue(ref(db, 'chat_messages'), snap => {
@@ -215,7 +234,8 @@ onValue(ref(db, 'chat_messages'), snap => {
     box.innerHTML = '';
     snap.forEach(c => {
         const m = c.val();
-        box.innerHTML += `<div><b style="color:${roleStyles[m.role]?.color}; cursor:pointer" onclick="viewUserProfile('${m.uid}')">${m.author}:</b> ${m.text}</div>`;
+        const color = roleStyles[m.role]?.color || '#888';
+        box.innerHTML += `<div><b style="color:${color}; cursor:pointer" onclick="viewUserProfile('${m.uid}')">${m.author}:</b> ${m.text}</div>`;
     });
     box.scrollTop = box.scrollHeight;
 });
@@ -224,26 +244,60 @@ onValue(ref(db, 'posts'), snap => {
     const cont = document.getElementById('news-container');
     if (!cont) return;
     cont.innerHTML = '';
-    let arr = []; snap.forEach(c => arr.push(c.val()));
+    let arr = []; 
+    snap.forEach(c => arr.push({ ...c.val(), id: c.key }));
     arr.reverse().forEach(p => {
-        cont.innerHTML += `<div class="card" style="border-left:3px solid ${roleStyles[p.role]?.color}"><small onclick="viewUserProfile('${p.uid}')" style="cursor:pointer; color:${roleStyles[p.role]?.color}">${p.author}</small><p>${p.text}</p></div>`;
+        const color = roleStyles[p.role]?.color || '#888';
+        cont.innerHTML += `
+            <div class="card" style="border-left:3px solid ${color}">
+                <small onclick="viewUserProfile('${p.uid}')" style="cursor:pointer; color:${color}; font-weight:bold;">${p.author.toUpperCase()}</small>
+                <p style="margin-top:10px;">${p.text}</p>
+            </div>`;
     });
 });
 
+// --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ---
 window.handleLogout = () => signOut(auth).then(() => location.reload());
 window.openAuthModal = () => auth.currentUser ? window.showTab(null, 'cabinet-section') : document.getElementById('auth-modal').style.display = 'flex';
-window.closeAuthModal = () => auth.currentUser ? document.getElementById('auth-modal').style.display = 'none' : alert("Login required");
-window.autoResize = (t) => { t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; };
+window.closeAuthModal = () => {
+    if (!auth.currentUser) {
+        alert("ACCESS REQUIRED");
+        return;
+    }
+    document.getElementById('auth-modal').style.display = 'none';
+};
+
+window.autoResize = (t) => {
+    t.style.height = 'auto';
+    t.style.height = t.scrollHeight + 'px';
+};
+
 window.toggleInputZone = () => {
     const z = document.getElementById('chat-input-zone');
     z.classList.toggle('minimized');
     z.querySelector('.toggle-input-btn').innerText = z.classList.contains('minimized') ? '+' : '–';
 };
 
+window.setAvatar = async (url) => {
+    if (auth.currentUser) {
+        await update(ref(db, 'users/' + auth.currentUser.uid), { avatar: url });
+        document.getElementById('user-avatar-display').src = url;
+    }
+};
+
+window.uploadAvatar = (input) => {
+    const reader = new FileReader();
+    reader.onload = (e) => window.setAvatar(e.target.result);
+    if (input.files[0]) reader.readAsDataURL(input.files[0]);
+};
+
 window.addEventListener('load', () => {
     initStars();
     setTimeout(() => {
         const l = document.getElementById('initial-loader');
-        if(l) { l.style.opacity = '0'; setTimeout(() => l.style.display='none', 800); }
+        if(l) { 
+            l.style.opacity = '0'; 
+            setTimeout(() => l.style.display='none', 800); 
+        }
     }, 1000);
 });

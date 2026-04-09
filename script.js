@@ -91,13 +91,13 @@ onAuthStateChanged(auth, async (user) => {
             // Загружаем кастомный статус
             loadCustomStatus();
 
+            let fCount = 0;
+
             onValue(ref(db, `follows/${user.uid}`), (s) => {
                 let followingCount = s.exists() ? Object.keys(s.val()).length : 0;
                 const el = document.getElementById('user-following-count');
                 if(el) el.innerText = followingCount;
             });
-
-            let fCount = 0;
 
             onValue(ref(db, 'follows'), (s) => {
                 fCount = 0;
@@ -410,16 +410,13 @@ window.showTab = (e, id) => {
 
 window.handleSend = async () => {
     const input = document.getElementById('chat-msg-input');
-    alert('handleSend вызван | input=' + !!input + ' | value="' + (input?.value || 'null') + '" | auth=' + !!auth.currentUser);
-
     if (!input) return;
-    if (!input.value.trim()) { alert('Пустое сообщение'); return; }
-    if (!auth.currentUser) { alert('Нужно войти!'); return; }
+    if (!input.value.trim()) return;
+    if (!auth.currentUser) return;
 
     try {
         const snap = await get(ref(db, 'users/' + auth.currentUser.uid));
-        alert('User snap exists: ' + snap.exists());
-        if (!snap.exists()) { alert('User не найден в БД'); return; }
+        if (!snap.exists()) return;
         const userData = snap.val();
 
         const newsSection = document.getElementById('news-section');
@@ -427,8 +424,6 @@ window.handleSend = async () => {
         const isNewsVisible = newsSection && newsSection.style.display === 'block';
         const isChatVisible = chatSection && chatSection.style.display === 'block';
         const path = isNewsVisible ? 'posts' : (isChatVisible ? 'chat_messages' : 'posts');
-
-        alert('Отправляю в: ' + path);
 
         const postData = {
             text: input.value,
@@ -439,14 +434,12 @@ window.handleSend = async () => {
             timestamp: Date.now()
         };
 
-        const newPostRef = push(ref(db, path));
-        await set(newPostRef, postData);
+        await push(ref(db, path), postData);
 
         input.value = '';
         autoResize(input);
-        alert('Отправлено!');
     } catch (err) {
-        alert('Ошибка: ' + err.code + ' | ' + err.message);
+        alert('Ошибка: ' + err.message);
     }
 };
 
@@ -472,44 +465,55 @@ onValue(ref(db, 'chat_messages'), snap => {
     box.scrollTop = box.scrollHeight;
 });
 
-onValue(ref(db, 'posts'), snap => {
-    const cont = document.getElementById('news-container');
-    if (!cont) return;
-    cont.style.display = 'block';
-    cont.style.border = '2px solid red';
-    cont.style.padding = '10px';
-    cont.innerHTML = '';
-    let arr = [];
-    snap.forEach(c => arr.push({ ...c.val(), id: c.key }));
-    arr.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+let postsListenerUnsub = null;
 
-    if (arr.length === 0) {
-        cont.innerHTML = '<p style="text-align:center;color:#333;padding:30px;">No posts yet</p>';
-        return;
+function startPostsListener() {
+    if (postsListenerUnsub) {
+        postsListenerUnsub();
     }
 
-    arr.forEach((p, i) => {
-        const color = roleStyles[p.role]?.color || '#888';
-        const time = p.timestamp ? new Date(p.timestamp).toLocaleDateString('ru-RU', {
-            day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
-        }) : '';
-        const status = p.customStatus ? `<span style="color:#555; font-size:10px; font-style:italic; margin-left:8px;">${p.customStatus}</span>` : '';
-        const card = document.createElement('div');
-        card.className = 'card site-news-card';
-        card.setAttribute('data-type', 'site');
-        card.style.cssText = `display:block; border-left:4px solid ${color}; opacity:1 !important; transform:none !important; animation:none !important; background:rgba(20,20,30,0.95); border:1px solid #444; padding:20px; margin-bottom:15px; color:#fff; border-radius:8px; position:relative; z-index:9999;`;
-        card.innerHTML = `
-            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <small onclick="viewUserProfile('${p.uid}')" style="cursor:pointer; color:${color}; font-weight:bold; font-size:11px; letter-spacing:1px; text-transform:uppercase;">${p.author.toUpperCase()}</small>
-                    ${status}
+    postsListenerUnsub = onValue(ref(db, 'posts'), snap => {
+        const cont = document.getElementById('news-container');
+        if (!cont) return;
+        cont.style.display = 'block';
+        cont.innerHTML = '';
+
+        let arr = [];
+        snap.forEach(c => {
+            const val = c.val();
+            val.id = c.key;
+            arr.push(val);
+        });
+        arr.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+        if (arr.length === 0) {
+            cont.innerHTML = '<p style="text-align:center;color:#333;padding:30px;">No posts yet</p>';
+            return;
+        }
+
+        arr.forEach((p) => {
+            const color = roleStyles[p.role]?.color || '#888';
+            const time = p.timestamp ? new Date(p.timestamp).toLocaleDateString('ru-RU', {
+                day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+            }) : '';
+            const status = p.customStatus ? `<span style="color:#555; font-size:10px; font-style:italic; margin-left:8px;">${p.customStatus}</span>` : '';
+            const card = document.createElement('div');
+            card.className = 'card site-news-card';
+            card.setAttribute('data-type', 'site');
+            card.style.cssText = `display:block; border-left:4px solid ${color}; background:rgba(10,10,15,0.85); border:1px solid rgba(255,255,255,0.06); padding:20px; margin-bottom:15px; color:#fff; border-radius:8px;`;
+            card.innerHTML = `
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <small onclick="viewUserProfile('${p.uid}')" style="cursor:pointer; color:${color}; font-weight:bold; font-size:11px; letter-spacing:1px; text-transform:uppercase;">${p.author.toUpperCase()}</small>
+                        ${status}
+                    </div>
+                    <span style="font-size:10px; color:#333; font-family:monospace;">${time}</span>
                 </div>
-                <span style="font-size:10px; color:#666; font-family:monospace;">${time}</span>
-            </div>
-            <p style="margin-top:10px; color:#eee; line-height:1.6; font-size:15px;">${p.text}</p>`;
-        cont.appendChild(card);
+                <p style="margin-top:10px; color:#ccc; line-height:1.6;">${p.text}</p>`;
+            cont.appendChild(card);
+        });
     });
-});
+}
 
 window.handleLogout = () => signOut(auth).then(() => location.reload());
 window.openAuthModal = () => auth.currentUser ? window.showTab(null, 'cabinet-section') : document.getElementById('auth-modal').style.display = 'flex';
@@ -872,6 +876,7 @@ async function renderSocialList() {
 window.addEventListener('load', () => {
     initStars();
     initMouseEffects();
+    startPostsListener();
     loadTelegramFeed().then(() => startTelegramAutoRefresh());
     setTimeout(() => {
         const l = document.getElementById('initial-loader');

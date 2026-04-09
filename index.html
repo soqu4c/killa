@@ -28,7 +28,13 @@
     </div>
 
     <section id="news-section" class="content-section" style="display: block;">
+        <div class="news-filter">
+            <button class="filter-btn active" data-filter="all" onclick="filterNews('all', this)">ALL</button>
+            <button class="filter-btn" data-filter="tg" onclick="filterNews('tg', this)">✈ TELEGRAM</button>
+            <button class="filter-btn" data-filter="site" onclick="filterNews('site', this)">◈ SITE</button>
+        </div>
         <div id="news-container" class="feed-container"></div>
+        <div id="telegram-feed" class="telegram-feed-container"></div>
     </section>
 
     <section id="info-section" class="content-section" style="display: none;">
@@ -49,60 +55,137 @@
     </section>
 
     <div id="user-profile-modal" class="modal-overlay" style="display:none;" onclick="this.style.display='none'">
-        <div class="modal-card" onclick="event.stopPropagation()">
-            <div class="profile-header">
-                <img id="view-avatar" src="" class="avatar-large">
-                <h2 id="view-name">---</h2>
+        <div class="modal-card profile-view-card" onclick="event.stopPropagation()">
+            <div class="profile-view-header">
+                <div class="profile-view-avatar-wrap">
+                    <img id="view-avatar" src="" class="avatar-large">
+                    <div class="avatar-glow-ring"></div>
+                </div>
+                <h2 id="view-name" class="gradient-nickname">---</h2>
                 <span id="view-role" class="role-badge">---</span>
             </div>
-            <div class="profile-stats">
-                <p>ID: <span id="view-id">---</span></p>
-                <p>RANK: <span id="view-security">---</span></p>
+            <div class="profile-view-stats">
+                <div class="profile-stat-row">
+                    <span class="profile-stat-label">ID</span>
+                    <span id="view-id" class="profile-stat-value">---</span>
+                </div>
+                <div class="profile-stat-row">
+                    <span class="profile-stat-label">RANK</span>
+                    <span id="view-security" class="profile-stat-value">---</span>
+                </div>
             </div>
-            <button id="follow-btn" class="auth-submit">FOLLOW</button>
+            <button id="follow-btn" class="follow-btn-modern">FOLLOW</button>
         </div>
     </div>
 
     <section id="cabinet-section" class="content-section" style="display: none;">
-        <div class="card profile-card">
-            <h1>PROFILE CONFIG</h1>
-            <div class="profile-main-info">
-                <img id="user-avatar-display" src="" class="avatar-current" alt="AV">
-                <div class="profile-text-info">
-                    <h2 id="user-display-name">---</h2>
-                    <span id="user-role-badge" class="role-badge">---</span>
+        <div class="cabinet-wrapper">
+            <div class="cabinet-header-card">
+                <div class="cabinet-bg-pattern"></div>
+                <div class="cabinet-header-content">
+                    <div class="cabinet-avatar-section">
+                        <img id="user-avatar-display" src="" class="cabinet-avatar" alt="AV">
+                        <div class="cabinet-avatar-ring"></div>
+                    </div>
+                    <div class="cabinet-info">
+                        <h2 id="user-display-name">---</h2>
+                        <span id="user-role-badge" class="role-badge">---</span>
+                        <p class="cabinet-user-id">ID: <span id="user-id-number">---</span></p>
+                    </div>
+                    <div class="cabinet-security-badge">
+                        <span class="security-icon">🛡</span>
+                        <span id="security-level">---</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <span class="stat-label">FOLLOWERS</span>
-                    <span id="user-followers-count" class="stat-value">0</span>
+            <div class="cabinet-stats-row">
+                <div class="cabinet-stat-card">
+                    <div class="stat-card-icon">👥</div>
+                    <div class="stat-card-info">
+                        <span class="stat-card-label">FOLLOWERS</span>
+                        <span id="user-followers-count" class="stat-card-value">0</span>
+                    </div>
                 </div>
-                <div class="stat-item">
-                    <span class="stat-label">FOLLOWING</span>
-                    <span id="user-following-count" class="stat-value">0</span>
+                <div class="cabinet-stat-card">
+                    <div class="stat-card-icon">➡️</div>
+                    <div class="stat-card-info">
+                        <span class="stat-card-label">FOLLOWING</span>
+                        <span id="user-following-count" class="stat-card-value">0</span>
+                    </div>
                 </div>
-                <div class="stat-item">
-                    <span class="stat-label">USER ID</span>
-                    <span id="user-id-number" class="stat-value">---</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">SECURITY</span>
-                    <span id="security-level" class="stat-value">---</span>
+                <div class="cabinet-stat-card">
+                    <div class="stat-card-icon">📊</div>
+                    <div class="stat-card-info">
+                        <span class="stat-card-label">ACTIVITY</span>
+                        <span class="stat-card-value" id="activity-score">---</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="post-form">
-                <h4>AVATAR CONFIG</h4>
-                <div class="avatar-grid">
-                    <img src="https://api.dicebear.com/7.x/identicon/svg?seed=1" class="av-opt" onclick="setAvatar(this.src)">
-                    <img src="https://api.dicebear.com/7.x/identicon/svg?seed=Killa" class="av-opt" onclick="setAvatar(this.src)">
-                    <label class="upload-label" for="avatar-upload">UPLOAD FROM PC</label>
-                    <input type="file" id="avatar-upload" accept="image/*" onchange="uploadAvatar(this)">
+            <div class="cabinet-card">
+                <h4><span class="section-icon">⚙</span> AVATAR CONFIG</h4>
+                <div class="avatar-showcase">
+                    <div class="avatar-preview-ring">
+                        <img id="avatar-preview-live" src="" class="avatar-preview-img" alt="">
+                    </div>
+                    <div class="avatar-options">
+                        <img src="https://api.dicebear.com/7.x/identicon/svg?seed=1" class="av-opt-lg" onclick="setAvatar(this.src)">
+                        <img src="https://api.dicebear.com/7.x/identicon/svg?seed=Killa" class="av-opt-lg" onclick="setAvatar(this.src)">
+                        <img src="https://api.dicebear.com/7.x/identicon/svg?seed=Cyber" class="av-opt-lg" onclick="setAvatar(this.src)">
+                        <img src="https://api.dicebear.com/7.x/identicon/svg?seed=Neon" class="av-opt-lg" onclick="setAvatar(this.src)">
+                        <label class="upload-btn" for="avatar-upload">
+                            <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            UPLOAD
+                        </label>
+                        <input type="file" id="avatar-upload" accept="image/*" onchange="uploadAvatar(this)">
+                    </div>
                 </div>
             </div>
-            <button class="logout-btn" onclick="handleLogout()">TERMINATE SESSION</button>
+
+            <div class="cabinet-card">
+                <h4><span class="section-icon">✎</span> CUSTOM STATUS</h4>
+                <div class="custom-status-zone">
+                    <input type="text" id="custom-status-input" placeholder="Set your status..." maxlength="50">
+                    <button class="status-save-btn" onclick="saveCustomStatus()">SAVE</button>
+                </div>
+                <div class="current-status-display">
+                    <span class="status-label">Current:</span>
+                    <span id="current-status-text">Not set</span>
+                </div>
+            </div>
+
+            <div class="cabinet-card">
+                <h4><span class="section-icon">👥</span> SOCIAL</h4>
+                <div class="social-tabs">
+                    <button class="social-tab active" onclick="showSocialTab('followers')">Followers</button>
+                    <button class="social-tab" onclick="showSocialTab('following')">Following</button>
+                </div>
+                <div id="social-list" class="social-list"></div>
+            </div>
+
+            <div class="cabinet-card">
+                <h4><span class="section-icon">📡</span> CONNECTION STATUS</h4>
+                <div class="connection-info">
+                    <div class="conn-row">
+                        <span class="conn-label">Status</span>
+                        <span class="conn-status online"><span class="status-dot"></span>CONNECTED</span>
+                    </div>
+                    <div class="conn-row">
+                        <span class="conn-label">Node</span>
+                        <span class="conn-value">KILLA-01</span>
+                    </div>
+                    <div class="conn-row">
+                        <span class="conn-label">Encryption</span>
+                        <span class="conn-value">AES-256</span>
+                    </div>
+                </div>
+            </div>
+
+            <button class="logout-btn-modern" onclick="handleLogout()">
+                <span class="logout-icon">⏻</span>
+                <span>TERMINATE SESSION</span>
+            </button>
         </div>
     </section>
 </main>
@@ -121,6 +204,7 @@
 <div id="chat-input-zone" class="input-broadcast-zone" style="display: none;">
     <button class="toggle-input-btn" onclick="toggleInputZone()">–</button>
     <div class="input-glass-container">
+        <div class="input-glow-bar"></div>
         <div class="input-wrapper">
             <textarea id="chat-msg-input" placeholder="Secure transmission..." rows="1" oninput="autoResize(this)"></textarea>
             <button class="send-trigger" onclick="handleSend()">
@@ -128,6 +212,10 @@
                     <path d="M22 2L11 13M22 2L15 22L11 13M11 13L2 9L22 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
             </button>
+        </div>
+        <div class="input-status-bar">
+            <span class="status-dot-small"></span>
+            <span>ENCRYPTED CONNECTION</span>
         </div>
     </div>
 </div>
